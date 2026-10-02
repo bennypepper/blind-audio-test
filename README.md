@@ -1,5 +1,7 @@
 # Blind Audio Quality Test
 
+> **Live Web App:** [https://blind-audio-test.sharkintheatlantis.workers.dev/](https://blind-audio-test.sharkintheatlantis.workers.dev/)
+
 An NPR-inspired double-blind ABX audio quality test web application. Compare real-world streaming tiers against lossless FLAC across diverse acoustic profiles.
 
 ## Overview
@@ -41,9 +43,3 @@ python -m http.server 8080
 ```
 
 Open `http://localhost:8080` in your web browser.
-
-## Cloudflare Pages Deployment
-
-* Framework preset: None
-* Build command: (leave empty)
-* Build output directory: (leave empty or .)
