@@ -1,0 +1,21 @@
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Environment and Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Editor and IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+npm-debug.log*
+.wrangler/
