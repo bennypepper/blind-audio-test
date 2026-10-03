@@ -1,1318 +1,1204 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blind ABX Audio Quality Test</title>
-  <style>
-    :root {
-      --bg: #f5f6f8;
-      --card-bg: #ffffff;
-      --primary: #1a73e8;
-      --primary-hover: #1557b0;
-      --text: #202124;
-      --text-muted: #5f6368;
-      --border: #dadce0;
-      --playing: #e8f0fe;
-      --picked: #e6f4ea;
-      --flac-color: #137333;
-      --opus192-color: #0d652d;
-      --opus128-color: #1a73e8;
-      --mp3-color: #b06000;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      padding-bottom: 80px;
-    }
-
-    header {
-      background-color: #ffffff;
-      border-bottom: 1px solid var(--border);
-      padding: 30px 20px 20px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    }
-
-    .container {
-      max-width: 920px;
-      margin: 0 auto;
-      padding: 0 15px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      font-size: 15px;
-      color: var(--text-muted);
-    }
-
-    .header-main {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .switch-wrap {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-      background: #f1f3f4;
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .switch-wrap:hover {
-      background: #e8eaed;
-      border-color: #c6c9cc;
-    }
-
-    .switch-wrap input {
-      display: none;
-    }
-
-    .switch-slider {
-      position: relative;
-      width: 36px;
-      height: 20px;
-      background-color: #bdc1c6;
-      border-radius: 20px;
-      transition: background-color 0.2s;
-      flex-shrink: 0;
-    }
-
-    .switch-slider::before {
-      content: "";
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      left: 3px;
-      top: 3px;
-      background-color: white;
-      border-radius: 50%;
-      transition: transform 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-    }
-
-    .switch-wrap input:checked + .switch-slider {
-      background-color: var(--primary);
-    }
-
-    .switch-wrap input:checked + .switch-slider::before {
-      transform: translateX(16px);
-    }
-
-    .switch-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .progress-bar-container {
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .progress-track {
-      flex: 1;
-      height: 8px;
-      background: #e0e0e0;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--primary);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--card-bg);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin-top: 24px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    .card-header {
-      background: #eef1f5;
-      padding: 10px 20px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #495057;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card-body {
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 24px;
-      padding: 20px;
-    }
-
-    @media (max-width: 720px) {
-      .card-body {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Metadata Column */
-    .meta-col {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .cover-art {
-      width: 100%;
-      aspect-ratio: 1/1;
-      border-radius: 6px;
-      object-fit: cover;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-bottom: 12px;
-      background: #e0e0e0;
-    }
-
-    .artist-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: #5f6368;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-
-    .song-title {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.25;
-      margin-bottom: 10px;
-    }
-
-    .challenge-tag {
-      font-size: 12px;
-      background: #f1f3f4;
-      padding: 8px 10px;
-      border-radius: 6px;
-      color: #3c4043;
-      margin-top: auto;
-      border: 1px solid #e8eaed;
-    }
-
-    .challenge-tag strong {
-      display: block;
-      color: #1a73e8;
-      margin-bottom: 3px;
-    }
-
-    /* Player Rows */
-    .player-col {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .player-col-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 4px 2px 4px;
-    }
-
-    .player-col-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .your-pick-label {
-      font-size: 11px;
-      font-weight: 800;
-      color: #5f6368;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      width: 48px;
-      text-align: center;
-    }
-
-    .sample-row {
-      display: flex;
-      align-items: center;
-      background: #f8f9fa;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
-      gap: 12px;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .sample-row.playing {
-      background: var(--playing);
-      border-color: #aecbfa;
-    }
-
-    .sample-row.correct-answer {
-      background: #f4fbf6;
-      border-color: #5cb85c;
-    }
-
-    .sample-row.wrong-answer {
-      background: #fdf5f5;
-      border-color: #d9534f;
-    }
-
-    .play-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 4px;
-      background: var(--primary);
-      border: none;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .play-btn:hover {
-      background: var(--primary-hover);
-    }
-
-    .play-btn:active {
-      transform: scale(0.96);
-    }
-
-    .play-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
-
-    .sample-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .sample-title-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .sample-label-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sample-label {
-      font-weight: 700;
-      font-size: 14px;
-      color: #202124;
-    }
-
-    .time-display {
-      font-size: 12px;
-      font-family: monospace;
-      color: var(--text-muted);
-    }
-
-    .scrubber {
-      width: 100%;
-      height: 6px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: #dadce0;
-      border-radius: 3px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .scrubber::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--primary);
-      cursor: pointer;
-    }
-
-    /* NPR Pick Box & Column */
-    .pick-col {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 48px;
-      flex-shrink: 0;
-    }
-
-    .npr-pick-box {
-      width: 36px;
-      height: 36px;
-      background: #ffffff;
-      border: 2px solid #bdc1c6;
-      border-radius: 4px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-      padding: 0;
-      outline: none;
-    }
-
-    .npr-pick-box:hover:not(:disabled) {
-      border-color: var(--primary);
-      background: #e8f0fe;
-      transform: scale(1.06);
-    }
-
-    /* NPR Wrong Pick: Solid Red with Bold White Cross */
-    .npr-pick-box.wrong {
-      background: #d9534f !important;
-      border-color: #d43f3a !important;
-      color: #ffffff !important;
-      cursor: default;
-      box-shadow: 0 1px 4px rgba(217, 83, 79, 0.4);
-    }
-
-    /* NPR Correct Pick / FLAC: Solid Green with Bold White Checkmark */
-    .npr-pick-box.correct {
-      background: #5cb85c !important;
-      border-color: #4cae4c !important;
-      color: #ffffff !important;
-      cursor: default;
-      box-shadow: 0 1px 4px rgba(92, 184, 92, 0.4);
-    }
-
-    /* Neutral unpicked options after reveal */
-    .npr-pick-box.neutral {
-      background: #f8f9fa;
-      border-color: #e0e0e0;
-      cursor: default;
-      opacity: 0.6;
-    }
-
-    .pick-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .pick-icon svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    /* Reveal Badge */
-    .reveal-badge {
-      display: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-left: 8px;
-    }
-
-    .badge-flac { background: #ceead6; color: #0d652d; border: 1px solid #81c995; }
-    .badge-aac256 { background: #e8f0fe; color: #185abc; border: 1px solid #aecbfa; }
-    .badge-opus128 { background: #feefe3; color: #b06000; border: 1px solid #fdd663; }
-    .badge-mp3128 { background: #fce8e6; color: #c5221f; border: 1px solid #f28b82; }
-
-    /* Results Dashboard */
-    #results-section {
-      display: none;
-      background: white;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      padding: 30px;
-      margin: 30px 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .results-hero {
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 24px;
-      margin-bottom: 24px;
-    }
-
-    .score-headline {
-      font-size: 32px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .score-sub {
-      font-size: 18px;
-      color: var(--text-muted);
-      margin-bottom: 15px;
-    }
-
-    .profile-pill {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 14px;
-      background: #e8f0fe;
-      color: var(--primary);
-      border: 1px solid #aecbfa;
-    }
-
-    .results-explanation {
-      font-size: 15px;
-      color: #3c4043;
-      margin-bottom: 20px;
-      line-height: 1.6;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      margin: 20px 0;
-    }
-
-    @media (max-width: 600px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    .stat-box {
-      background: #f8f9fa;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 12px;
-      text-align: center;
-    }
-
-    .stat-val {
-      font-size: 22px;
-      font-weight: 800;
-      color: #202124;
-    }
-
-    .stat-lbl {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-top: 4px;
-    }
-
-    .btn-retry {
-      background: var(--primary);
-      color: white;
-      font-size: 15px;
-      font-weight: 700;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      margin-top: 15px;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn-retry:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-    }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .btn-reshuffle-header {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 7px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      transition: background 0.2s, border-color 0.2s, transform 0.1s;
-    }
-
-    .btn-reshuffle-header:hover {
-      background: #f1f3f4;
-      border-color: #bdc1c6;
-    }
-
-    .btn-reshuffle-header:active {
-      transform: scale(0.97);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blind Audio Quality Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #F3F4F6;
+    --surface: #FFFFFF;
+    --ink: #1B2433;
+    --ink-hover: #2B3649;
+    --muted: #5A6475;
+    --line: #DEE2E8;
+    --line-strong: #C3C9D3;
+    --soft: #EEF0F3;
+    --accent: #2D3FE0;
+    --accent-strong: #2231B8;
+    --accent-soft: #E9ECFD;
+    --good: #17794D;
+    --good-soft: #E7F4EC;
+    --good-ink: #0F5A38;
+    --bad: #B3261E;
+    --bad-soft: #FCEBE9;
+    --bad-ink: #8C1D18;
+    --font: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --r-panel: 16px;
+    --r-row: 10px;
+    --r-ctl: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 96px;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  ul, ol { list-style: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg { display: block; }
+
+  /* Top bar */
+  .bar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .bar-in { max-width: 960px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; font-size: 16px; }
+  .brand svg { color: var(--accent); }
+  .progress { flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0; justify-content: center; }
+  .segs { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; flex: 1; max-width: 320px; }
+  .seg { height: 6px; border-radius: 3px; background: var(--line); }
+  .seg.done { background: var(--ink); }
+  .seg.current { background: var(--accent); }
+  .progress-text { font-size: 14px; color: var(--muted); white-space: nowrap; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 0 18px; border-radius: var(--r-ctl); font-weight: 600; font-size: 15px; transition: background .15s, border-color .15s, color .15s; }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--ink-hover); }
+  .btn-primary:disabled { background: var(--line); color: #7C8696; }
+  .btn-quiet { border: 1px solid var(--line-strong); background: var(--surface); }
+  .btn-quiet:hover { background: var(--soft); }
+  .btn-sm { min-height: 40px; padding: 0 14px; font-size: 14px; }
+
+  /* Page */
+  .page { max-width: 960px; margin: 0 auto; padding: 44px 20px 0; }
+  h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.1; letter-spacing: -.028em; font-weight: 700; }
+  .lede { margin-top: 12px; font-size: 18px; color: var(--muted); max-width: 62ch; }
+
+  .touch-note { display: none; margin-top: 24px; gap: 12px; padding: 14px 16px; border-radius: var(--r-row); background: #FFF7ED; border: 1px solid #FFEDD5; color: #9A3412; font-size: 14px; line-height: 1.45; }
+  .touch-note svg { flex: none; margin-top: 2px; }
+  .touch-note.show { display: flex; }
+  @media (pointer: coarse) { .touch-note { display: flex; } }
+
+  .tips { margin-top: 28px; border: 1px solid var(--line); border-radius: var(--r-panel); background: var(--surface); }
+  .tips summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; font-weight: 600; font-size: 15px; }
+  .tips summary::-webkit-details-marker { display: none; }
+  .tips summary .hint-time { font-weight: 400; color: var(--muted); font-size: 14px; }
+  .tips summary .chev { margin-left: auto; color: var(--muted); transition: transform .2s; }
+  .tips[open] summary .chev { transform: rotate(180deg); }
+  .tips-body { padding: 0 20px 20px; }
+  .tips-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 40px; }
+  .tip { display: flex; gap: 12px; }
+  .tip svg { flex: none; color: var(--accent); margin-top: 2px; }
+  .tip b { display: block; font-weight: 600; }
+  .tip span { color: var(--muted); font-size: 14px; display: block; }
+  .tips-foot { margin-top: 20px; display: flex; justify-content: flex-end; }
+
+  /* Question list */
+  .panel { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); overflow: hidden; }
+  .q { border-top: 1px solid var(--line); scroll-margin-top: 76px; }
+  .q:first-child { border-top: 0; }
+  .q.open { box-shadow: inset 3px 0 0 var(--accent); }
+  .q-h { font: inherit; }
+  .q-head { width: 100%; display: grid; grid-template-columns: 28px 48px minmax(0, 1fr) auto 20px; align-items: center; gap: 14px; padding: 14px 20px; text-align: left; background: none; }
+  .q-head:hover { background: #FAFBFC; }
+  .q-num { color: var(--muted); font-size: 14px; text-align: center; }
+  .thumb { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--soft); flex: none; }
+  .thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .q-main { display: flex; flex-direction: column; min-width: 0; }
+  .q-title { font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-sub { font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-status { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .q-status svg { width: 16px; height: 16px; }
+  .q-status.ok { color: var(--good); font-weight: 600; }
+  .q-status.no { color: var(--bad); font-weight: 600; }
+  .q-status.now { color: var(--accent); font-weight: 600; }
+  .q-head .chev { color: var(--muted); transition: transform .2s; }
+  .q.open .q-head .chev { transform: rotate(180deg); }
+
+  .q-body { padding: 4px 20px 26px 62px; }
+  .hint { color: var(--muted); font-size: 15px; margin-bottom: 14px; }
+  .hint b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+
+  /* Waveform */
+  .wave { position: relative; height: 72px; cursor: pointer; touch-action: none; border-radius: 8px; user-select: none; }
+  .wave-layer { position: absolute; inset: 0; display: flex; align-items: center; gap: 2px; pointer-events: none; }
+  .wave-layer i { flex: 1; min-width: 1px; background: #CBD1DB; border-radius: 2px; }
+  .wave-layer.played i { background: var(--accent); }
+  .wave-layer.played { clip-path: inset(0 calc(100% - var(--p, 0%)) 0 0); }
+  .playhead { position: absolute; top: -4px; bottom: -4px; left: var(--p, 0%); width: 2px; margin-left: -1px; background: var(--accent); border-radius: 1px; pointer-events: none; }
+
+  .transport { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 20px; }
+  .play { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; transition: background .15s; }
+  .play:hover { background: var(--accent-strong); }
+  .time { font-size: 15px; color: var(--muted); min-width: 84px; }
+  .time b { color: var(--ink); font-weight: 600; }
+  .sync { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; cursor: pointer; }
+  .sync input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .sync .track { position: relative; width: 38px; height: 22px; border-radius: 11px; background: #B7BECA; transition: background .2s; flex: none; }
+  .sync .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .sync input:checked + .track { background: var(--accent); }
+  .sync input:checked + .track::after { transform: translateX(16px); }
+  .sync input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Sample rows */
+  .samples { display: grid; gap: 8px; }
+  .s { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .s-main { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 14px; align-items: center; text-align: left; padding: 10px 14px; min-height: 60px; border: 1px solid var(--line); border-radius: var(--r-row); background: var(--surface); transition: border-color .15s, background .15s; }
+  button.s-main:hover { border-color: var(--line-strong); }
+  .s.active .s-main { border-color: var(--accent); background: var(--accent-soft); }
+  .badge-n { grid-row: span 2; width: 40px; height: 40px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font-weight: 700; font-size: 15px; color: var(--ink); flex: none; }
+  .s.active .badge-n { background: var(--accent); color: #fff; }
+  .s-top, .s-state, .rate { grid-column: 2; }
+  .s-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; }
+  .s-label { font-weight: 600; }
+  .s-codec { font-size: 14px; color: var(--muted); }
+  .s-codec b { color: var(--ink); font-weight: 600; margin-right: 6px; white-space: nowrap; }
+  .s-state { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 10px; min-height: 18px; }
+  .s-state.now { color: var(--accent); font-weight: 600; }
+  .s-state.err { color: var(--bad); }
+  .s-state .link { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .rate { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+  .rate .bar-r { width: 140px; max-width: 40vw; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .rate .bar-r i { display: block; height: 100%; background: var(--ink); }
+
+  .pick { width: 108px; min-height: 60px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--r-row); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 14px; transition: background .15s, border-color .15s, color .15s; }
+  .pick:hover:not(:disabled) { border-color: var(--ink); }
+  .pick[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .pick:disabled { color: #8A93A3; background: var(--soft); border-color: var(--line); }
+  .pick svg { width: 16px; height: 16px; }
+
+  .s.reveal { grid-template-columns: minmax(0, 1fr); }
+  .s.reveal .s-main { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .mark { grid-column: 3; grid-row: 1 / span 2; min-width: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 700; letter-spacing: -.01em; padding-left: 10px; }
+  .mark svg { width: 22px; height: 22px; }
+  .mark.ok { color: var(--good); }
+  .mark.no { color: var(--bad); }
+
+  .s.reveal.is-flac .s-main { border-color: var(--good); background: var(--good-soft); }
+  .s.reveal.is-flac .badge-n { background: var(--good); color: #fff; }
+  .s.reveal.is-wrong .s-main { border-color: var(--bad); background: var(--bad-soft); }
+  .s.reveal.is-wrong .badge-n { background: var(--bad); color: #fff; }
+  .s.reveal.active:not(.is-flac):not(.is-wrong) .s-main { border-color: var(--accent); background: var(--accent-soft); }
+
+  /* Equalizer */
+  .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+  .eq i { width: 3px; background: currentColor; border-radius: 1px; height: 40%; animation: eq 0.9s ease-in-out infinite alternate; }
+  .eq i:nth-child(2) { animation-delay: -.3s; }
+  .eq i:nth-child(3) { animation-delay: -.6s; }
+  @keyframes eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+
+  .foot { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+  .foot-msg { font-size: 14px; color: var(--muted); max-width: 52ch; }
+  .outcome { margin-top: 18px; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--r-row); font-size: 14px; line-height: 1.45; }
+  .outcome svg { flex: none; width: 22px; height: 22px; margin-top: 1px; }
+  .outcome.ok { background: var(--good-soft); color: var(--good-ink); }
+  .outcome.no { background: var(--bad-soft); color: var(--bad-ink); }
+  .outcome-row { margin-top: 14px; display: flex; justify-content: flex-end; }
+
+  /* Results */
+  .results { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); padding: 36px 32px; }
+  .results[hidden] { display: none; }
+  h2 { font-size: clamp(22px, 3.2vw, 30px); line-height: 1.15; letter-spacing: -.022em; font-weight: 700; }
+  h3 { font-size: 16px; font-weight: 600; }
+  .r-sub { margin-top: 6px; color: var(--muted); font-size: 17px; }
+  .scale { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; margin: 26px 0 12px; }
+  .cell { height: 46px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .cell.upto { background: var(--accent-soft); color: var(--accent); }
+  .cell.you { background: var(--accent); color: #fff; }
+  .cell.chance { outline: 2px dashed #7C8696; outline-offset: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: var(--muted); }
+  .legend li { display: flex; align-items: center; gap: 8px; }
+  .lg { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .lg.you { background: var(--accent); }
+  .lg.chance { outline: 2px dashed #7C8696; outline-offset: -1px; background: var(--soft); }
+  .verdict { margin-top: 24px; padding: 16px 18px; border-radius: var(--r-row); background: var(--soft); font-size: 15px; line-height: 1.5; }
+  .verdict b { font-weight: 700; }
+  .r-grid { margin-top: 32px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+  .songs, .tally { margin-top: 12px; display: grid; gap: 4px; }
+  .songs li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .songs li:first-child { border-top: 0; }
+  .mk { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; flex: none; }
+  .mk svg { width: 13px; height: 13px; }
+  .mk.ok { background: var(--good); }
+  .mk.no { background: var(--bad); }
+  .songs b { display: block; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .songs span.sub { display: block; font-size: 13px; color: var(--muted); }
+  .tally li { padding: 8px 0; border-top: 1px solid var(--line); }
+  .tally li:first-child { border-top: 0; }
+  .t-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .t-top b { font-weight: 600; }
+  .t-top span { color: var(--muted); font-size: 14px; }
+  .t-bar { margin-top: 6px; height: 6px; border-radius: 3px; background: var(--soft); overflow: hidden; }
+  .t-bar i { display: block; height: 100%; background: #9AA3B2; border-radius: 3px; }
+  .t-bar i.lossless { background: var(--ink); }
+  .fine { margin-top: 28px; font-size: 14px; color: var(--muted); max-width: 70ch; }
+  .r-actions { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+  footer.site { max-width: 960px; margin: 32px auto 0; padding: 0 20px; font-size: 13px; color: var(--muted); }
+  footer.site p { max-width: 72ch; }
+
+  /* Dialog */
+  dialog { border: 0; border-radius: var(--r-panel); padding: 24px; width: calc(100% - 32px); max-width: 440px; margin: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
+  dialog::backdrop { background: rgba(27,36,51,.45); }
+  dialog h2 { font-size: 20px; }
+  dialog p { margin-top: 8px; color: var(--muted); font-size: 15px; }
+  .dlg-actions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .r-grid { grid-template-columns: 1fr; }
+    .tips-grid { grid-template-columns: 1fr; }
+    .results { padding: 24px 18px; }
+  }
+  @media (max-width: 640px) {
+    .bar-in { gap: 12px; padding: 0 16px; }
+    .brand span { display: none; }
+    .progress-text .full { display: none; }
+    .btn .lbl { display: none; }
+    #reshuffle { padding: 0; width: 44px; }
+    .page { padding: 28px 16px 0; }
+    .lede { font-size: 16px; }
+    .q-head { grid-template-columns: 48px minmax(0, 1fr) 20px; grid-template-areas: "thumb main chev" "status status status"; }
+    .q-num { display: none; }
+    .thumb { grid-area: thumb; }
+    .q-main { grid-area: main; }
+    .q-status { grid-area: status; }
+    .q-head .chev { grid-area: chev; }
+    .q-body { padding: 4px 16px 22px; }
+    .sync { margin-left: 0; width: 100%; }
+    .pick { width: 92px; }
+    .mark { min-width: 60px; }
+    .s-main { padding: 10px 12px; column-gap: 12px; }
+    .rate .bar-r { width: 90px; }
+    .s-top { flex-direction: column; align-items: flex-start; gap: 0; }
+    .s-codec b { display: block; margin-right: 0; }
+    .scale { gap: 4px; }
+    .cell { height: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .eq i { height: 70%; }
+  }
+</style>
 </head>
 <body>
 
-  <header>
-    <div class="container">
-      <div class="header-main">
-        <div>
-          <h1>Blind ABX Audio Quality Test</h1>
-          <p class="subtitle">Listen to all 4 blind samples for each track, then pick the one you think is <strong>highest quality</strong>.</p>
-        </div>
-        <div class="header-controls">
-          <button class="btn-reshuffle-header" onclick="reshuffleTest(true)" title="Reshuffle: swaps 3-5 songs randomly and re-randomizes all blind options">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-            <span>Reshuffle Test</span>
-          </button>
-          <label class="switch-wrap" title="Synchronize playback position when switching between samples">
-            <input type="checkbox" id="sync-toggle" checked>
-            <span class="switch-slider"></span>
-            <span class="switch-label">Synchronous Switching</span>
-          </label>
-        </div>
-      </div>
-      
-      <div class="progress-bar-container">
-        <span id="progress-text">Answered 0 of 8</span>
-        <div class="progress-track">
-          <div class="progress-fill" id="progress-fill"></div>
-        </div>
-      </div>
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="10" width="3" height="4" rx="1"/><rect x="8" y="6" width="3" height="12" rx="1"/><rect x="13" y="3" width="3" height="18" rx="1"/><rect x="18" y="8" width="3" height="8" rx="1"/></svg>
+      <span>Blind Audio Test</span>
     </div>
-  </header>
-
-  <main class="container">
-
-    <!-- Questions Container -->
-    <div id="questions-list"></div>
-
-    <!-- Results Section (revealed when all questions are answered) -->
-    <div id="results-section">
-      <div class="results-hero">
-        <div class="score-headline" id="score-title">Your Score</div>
-        <div class="score-sub" id="score-subtitle">Amount wrong / 8 songs</div>
-        <div class="profile-pill" id="score-profile">Auditory Profile</div>
-      </div>
-
-      <div class="results-explanation" id="score-text"></div>
-
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-val" id="stat-flac">0</div>
-          <div class="stat-lbl">Lossless (FLAC)</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" id="stat-aac256">0</div>
-          <div class="stat-lbl">Apple Music (256k AAC)</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" id="stat-opus128">0</div>
-          <div class="stat-lbl">YouTube Music (128k Opus)</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" id="stat-mp3">0</div>
-          <div class="stat-lbl">Standard (128k MP3)</div>
-        </div>
-      </div>
-
-      <div style="text-align: center;">
-        <button class="btn-retry" onclick="resetTest()">Re-Shuffle Songs & Try Again</button>
-      </div>
+    <div class="progress" id="progress" role="progressbar" aria-label="Questions answered" aria-valuenow="0" aria-valuemin="0" aria-valuemax="8">
+      <div class="segs" id="segs"></div>
+      <span class="progress-text" id="progress-text"></span>
     </div>
+    <button class="btn btn-quiet btn-sm" id="reshuffle" aria-label="Reshuffle songs">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      <span class="lbl">Reshuffle</span>
+    </button>
+  </div>
+</header>
 
-  </main>
+<main class="page">
+  <h1>Can you hear the difference?</h1>
+  <p class="lede">Each song comes in four versions: one lossless, three compressed the way popular streaming services do it. Switch between them while the song plays and pick the one with the highest quality.</p>
 
-  <script>
-    const SONG_CATEGORIES = [
-      {
-        category: "Intimate Solo Vocal",
-        contenders: [
-          {
-            id: 1,
-            artist: "ADELE",
-            title: "All I Ask",
-            category: "Intimate Solo Vocal",
-            challenge: "Vocal sibilance ('s', 't') & subtle room reverb decay against acoustic piano.",
-            cover: "covers/song1.jpg",
-            files: {
-              flac: "audio/song1_flac.flac",
-              aac256: "audio/song1_aac256.m4a",
-              opus128: "audio/song1_opus128.opus",
-              mp3128: "audio/song1_mp3128.mp3"
-            }
-          },
-          {
-            id: 9,
-            artist: "HOZIER",
-            title: "Take Me to Church",
-            category: "Intimate Solo Vocal",
-            challenge: "Raw vocal dynamics, breath micro-details, and room reverb decay on backing choir.",
-            cover: "covers/song9.jpg",
-            files: {
-              flac: "audio/song9_flac.flac",
-              aac256: "audio/song9_aac256.m4a",
-              opus128: "audio/song9_opus128.opus",
-              mp3128: "audio/song9_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "Acoustic Grand Piano & Strings",
-        contenders: [
-          {
-            id: 2,
-            artist: "TEDDY SWIMS",
-            title: "Lose Control (Piano Version)",
-            category: "Acoustic Grand Piano & Strings",
-            challenge: "Piano hammer attack transients & sustained resonance (lossy codecs often warble).",
-            cover: "covers/song2.jpg",
-            files: {
-              flac: "audio/song2_flac.flac",
-              aac256: "audio/song2_aac256.m4a",
-              opus128: "audio/song2_opus128.opus",
-              mp3128: "audio/song2_mp3128.mp3"
-            }
-          },
-          {
-            id: 10,
-            artist: "HOZIER",
-            title: "Be (Acoustic)",
-            category: "Acoustic Grand Piano & Strings",
-            challenge: "Acoustic pluck/attack transients and warm room reverberation decay.",
-            cover: "covers/song10.jpg",
-            files: {
-              flac: "audio/song10_flac.flac",
-              aac256: "audio/song10_aac256.m4a",
-              opus128: "audio/song10_opus128.opus",
-              mp3128: "audio/song10_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "Complex Cymbals & Rock Drums",
-        contenders: [
-          {
-            id: 3,
-            artist: "FOO FIGHTERS",
-            title: "The Pretender",
-            category: "Complex Cymbals & Rock Drums",
-            challenge: "Ride cymbal sizzle & crash attacks (128k MP3 notoriously creates metallic swish).",
-            cover: "covers/song3.jpg",
-            files: {
-              flac: "audio/song3_flac.flac",
-              aac256: "audio/song3_aac256.m4a",
-              opus128: "audio/song3_opus128.opus",
-              mp3128: "audio/song3_mp3128.mp3"
-            }
-          },
-          {
-            id: 11,
-            artist: "QUEEN",
-            title: "Another One Bites the Dust",
-            category: "Complex Cymbals & Rock Drums",
-            challenge: "Crisp snare snap, hi-hat shimmer, and dry punchy bass transients.",
-            cover: "covers/song11.jpg",
-            files: {
-              flac: "audio/song11_flac.flac",
-              aac256: "audio/song11_aac256.m4a",
-              opus128: "audio/song11_opus128.opus",
-              mp3128: "audio/song11_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "EDM Sub-Bass & Stereo Synths",
-        contenders: [
-          {
-            id: 4,
-            artist: "ZEDD ft. FOXES",
-            title: "Clarity",
-            category: "EDM Sub-Bass & Stereo Synths",
-            challenge: "Deep 40Hz sub-bass drop, sidechain pumping, and wide stereo synth separation.",
-            cover: "covers/song4.jpg",
-            files: {
-              flac: "audio/song4_flac.flac",
-              aac256: "audio/song4_aac256.m4a",
-              opus128: "audio/song4_opus128.opus",
-              mp3128: "audio/song4_mp3128.mp3"
-            }
-          },
-          {
-            id: 12,
-            artist: "ALAN WALKER",
-            title: "Faded",
-            category: "EDM Sub-Bass & Stereo Synths",
-            challenge: "Massive 35Hz sub-bass drop, wide stereophonic synths, and pitch-shifted vocal harmonics.",
-            cover: "covers/song12.jpg",
-            files: {
-              flac: "audio/song12_flac.flac",
-              aac256: "audio/song12_aac256.m4a",
-              opus128: "audio/song12_opus128.opus",
-              mp3128: "audio/song12_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "Funk Groove & Sharp Horns",
-        contenders: [
-          {
-            id: 5,
-            artist: "BRUNO MARS",
-            title: "24K Magic",
-            category: "Funk Groove & Sharp Horns",
-            challenge: "Snappy slap bass transients, 80s drum machine crack, and bright horn fanfares.",
-            cover: "covers/song5.jpg",
-            files: {
-              flac: "audio/song5_flac.flac",
-              aac256: "audio/song5_aac256.m4a",
-              opus128: "audio/song5_opus128.opus",
-              mp3128: "audio/song5_mp3128.mp3"
-            }
-          },
-          {
-            id: 13,
-            artist: "DAFT PUNK",
-            title: "Get Lucky",
-            category: "Funk Groove & Sharp Horns",
-            challenge: "Nile Rodgers' razor-sharp funk guitar strum transients and punchy disco bassline.",
-            cover: "covers/song13.jpg",
-            files: {
-              flac: "audio/song13_flac.flac",
-              aac256: "audio/song13_aac256.m4a",
-              opus128: "audio/song13_opus128.opus",
-              mp3128: "audio/song13_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "Modern Polished Pop",
-        contenders: [
-          {
-            id: 6,
-            artist: "DUA LIPA",
-            title: "Don't Start Now",
-            category: "Modern Polished Pop",
-            challenge: "Nu-disco bassline groove, crisp handclaps, and multi-tracked vocal layers.",
-            cover: "covers/song6.jpg",
-            files: {
-              flac: "audio/song6_flac.flac",
-              aac256: "audio/song6_aac256.m4a",
-              opus128: "audio/song6_opus128.opus",
-              mp3128: "audio/song6_mp3128.mp3"
-            }
-          },
-          {
-            id: 14,
-            artist: "ARIANA GRANDE",
-            title: "7 rings",
-            category: "Modern Polished Pop",
-            challenge: "Deep 808 sub-bass, rapid trap hi-hat rolls, and close-mic airy vocal harmonies.",
-            cover: "covers/song14.jpg",
-            files: {
-              flac: "audio/song14_flac.flac",
-              aac256: "audio/song14_aac256.m4a",
-              opus128: "audio/song14_opus128.opus",
-              mp3128: "audio/song14_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "Symphony Orchestra & Chimes",
-        contenders: [
-          {
-            id: 7,
-            artist: "JOHN WILLIAMS",
-            title: "Carol of the Bells",
-            category: "Symphony Orchestra & Chimes",
-            challenge: "High-frequency glockenspiel overtone decay and massed acoustic string sections.",
-            cover: "covers/song7.jpg",
-            files: {
-              flac: "audio/song7_flac.flac",
-              aac256: "audio/song7_aac256.m4a",
-              opus128: "audio/song7_opus128.opus",
-              mp3128: "audio/song7_mp3128.mp3"
-            }
-          },
-          {
-            id: 15,
-            artist: "TRANS-SIBERIAN ORCHESTRA",
-            title: "Christmas Eve / Sarajevo 12/24",
-            category: "Symphony Orchestra & Chimes",
-            challenge: "Glockenspiel bell harmonics colliding with heavy electric guitars and orchestral strings.",
-            cover: "covers/song15.jpg",
-            files: {
-              flac: "audio/song15_flac.flac",
-              aac256: "audio/song15_aac256.m4a",
-              opus128: "audio/song15_opus128.opus",
-              mp3128: "audio/song15_mp3128.mp3"
-            }
-          }
-        ]
-      },
-      {
-        category: "Hyper-Dense Fast J-Pop",
-        contenders: [
-          {
-            id: 8,
-            artist: "YOASOBI",
-            title: "Adventure",
-            category: "Hyper-Dense Fast J-Pop",
-            challenge: "Dense wall of sound: rapid piano arpeggios, fast electronic kick, and vocal stacks.",
-            cover: "covers/song8.jpg",
-            files: {
-              flac: "audio/song8_flac.flac",
-              aac256: "audio/song8_aac256.m4a",
-              opus128: "audio/song8_opus128.opus",
-              mp3128: "audio/song8_mp3128.mp3"
-            }
-          },
-          {
-            id: 16,
-            artist: "Mrs. GREEN APPLE",
-            title: "Soranji",
-            category: "Hyper-Dense Fast J-Pop",
-            challenge: "Dense wall of sound: soaring vocal vibrato over high-tempo orchestral rock arrangement.",
-            cover: "covers/song16.jpg",
-            files: {
-              flac: "audio/song16_flac.flac",
-              aac256: "audio/song16_aac256.m4a",
-              opus128: "audio/song16_opus128.opus",
-              mp3128: "audio/song16_mp3128.mp3"
-            }
-          }
-        ]
-      }
-    ];
+  <div class="touch-note" id="touch-note" role="note">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    <span>On a phone? Speakers and Bluetooth earbuds can hide acoustic differences. For a meaningful test, we recommend a computer with wired headphones.</span>
+  </div>
 
-    const FORMAT_NAMES = {
-      flac: "Lossless (FLAC)",
-      aac256: "Apple Music (256 kbps AAC)",
-      opus128: "YouTube Music (128 kbps Opus)",
-      mp3128: "Standard (128 kbps MP3)"
+  <details class="tips" id="tips" open>
+    <summary>
+      For a fair listen <span class="hint-time">About 10 minutes</span>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="tips-body">
+      <div class="tips-grid">
+        <div class="tip">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+          <div><b>Use wired headphones</b><span>Bluetooth re-compresses audio and can mask subtle acoustic details.</span></div>
+        </div>
+        <div class="tip">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+          <div><b>Find a quiet room</b><span>Background noise masks decay tails and micro-transients.</span></div>
+        </div>
+        <div class="tip">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <div><b>Turn off sound effects</b><span>Switch off EQ, bass boost, Dolby Atmos, and spatial audio.</span></div>
+        </div>
+        <div class="tip">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <div><b>Keep volume steady</b><span>Pure random guessing averages 2 out of 8 (25% chance level).</span></div>
+        </div>
+      </div>
+      <div class="tips-foot"><button class="btn btn-primary btn-sm" id="tips-ok">Got it</button></div>
+    </div>
+  </details>
+
+  <h2 class="sr-only">Songs</h2>
+  <ol class="panel" id="qlist"></ol>
+
+  <section class="results" id="results" hidden aria-labelledby="r-title"></section>
+</main>
+
+<footer class="site">
+  <p>Samples are encoded directly from identical lossless FLAC masters at bitrates comparable to popular streaming platforms. Not captured from live streaming feeds.</p>
+</footer>
+
+<div class="sr-only" id="live" aria-live="polite"></div>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <h2 id="dlg-title">Reshuffle songs?</h2>
+  <p id="dlg-text"></p>
+  <div class="dlg-actions">
+    <button class="btn btn-quiet" id="dlg-cancel">Keep my answers</button>
+    <button class="btn btn-primary" id="dlg-ok">Reshuffle</button>
+  </div>
+</dialog>
+
+<script>
+  /* Data */
+  const CODECS = {
+    flac:    { name: 'FLAC',          service: 'Lossless Master', kbps: 700, label: '~700 kbps' },
+    aac256:  { name: 'AAC 256 kbps',  service: 'Apple Music',     kbps: 256, label: '256 kbps' },
+    opus128: { name: 'Opus 128 kbps', service: 'YouTube Music',   kbps: 128, label: '128 kbps' },
+    mp3128:  { name: 'MP3 128 kbps',  service: 'Standard MP3',    kbps: 128, label: '128 kbps' }
+  };
+  const KEYS = ['flac', 'aac256', 'opus128', 'mp3128'];
+
+  const SONG_CATEGORIES = [
+    {
+      category: "Intimate Solo Vocal",
+      contenders: [
+        {
+          id: 1,
+          artist: "Adele",
+          title: "All I Ask",
+          cat: "Intimate Solo Vocal",
+          hint: "Vocal sibilance, breath micro-details, and room reverb decay on piano.",
+          cover: "covers/song1.jpg",
+          files: {
+            flac: "audio/song1_flac.flac",
+            aac256: "audio/song1_aac256.m4a",
+            opus128: "audio/song1_opus128.opus",
+            mp3128: "audio/song1_mp3128.mp3"
+          }
+        },
+        {
+          id: 9,
+          artist: "Hozier",
+          title: "Take Me to Church",
+          cat: "Intimate Solo Vocal",
+          hint: "Vocal dynamics, natural breathing, and ambient room reverberation on the backing choir.",
+          cover: "covers/song9.jpg",
+          files: {
+            flac: "audio/song9_flac.flac",
+            aac256: "audio/song9_aac256.m4a",
+            opus128: "audio/song9_opus128.opus",
+            mp3128: "audio/song9_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "Acoustic Grand Piano and Strings",
+      contenders: [
+        {
+          id: 2,
+          artist: "Teddy Swims",
+          title: "Lose Control (Piano Version)",
+          cat: "Acoustic Grand Piano and Strings",
+          hint: "Piano hammer attack transients, soundboard resonance, and sustained decay.",
+          cover: "covers/song2.jpg",
+          files: {
+            flac: "audio/song2_flac.flac",
+            aac256: "audio/song2_aac256.m4a",
+            opus128: "audio/song2_opus128.opus",
+            mp3128: "audio/song2_mp3128.mp3"
+          }
+        },
+        {
+          id: 10,
+          artist: "Hozier",
+          title: "Be (Acoustic)",
+          cat: "Acoustic Grand Piano and Strings",
+          hint: "Acoustic guitar pluck transients and warm natural room decay.",
+          cover: "covers/song10.jpg",
+          files: {
+            flac: "audio/song10_flac.flac",
+            aac256: "audio/song10_aac256.m4a",
+            opus128: "audio/song10_opus128.opus",
+            mp3128: "audio/song10_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "Complex Cymbals and Rock Drums",
+      contenders: [
+        {
+          id: 3,
+          artist: "Foo Fighters",
+          title: "The Pretender",
+          cat: "Complex Cymbals and Rock Drums",
+          hint: "Ride cymbal sizzle, crash overtones, and sharp snare transient decay.",
+          cover: "covers/song3.jpg",
+          files: {
+            flac: "audio/song3_flac.flac",
+            aac256: "audio/song3_aac256.m4a",
+            opus128: "audio/song3_opus128.opus",
+            mp3128: "audio/song3_mp3128.mp3"
+          }
+        },
+        {
+          id: 11,
+          artist: "Queen",
+          title: "Another One Bites the Dust",
+          cat: "Complex Cymbals and Rock Drums",
+          hint: "Crisp snare snap, hi-hat shimmer, and dry punchy bass transients.",
+          cover: "covers/song11.jpg",
+          files: {
+            flac: "audio/song11_flac.flac",
+            aac256: "audio/song11_aac256.m4a",
+            opus128: "audio/song11_opus128.opus",
+            mp3128: "audio/song11_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "EDM Sub-Bass and Stereo Synths",
+      contenders: [
+        {
+          id: 4,
+          artist: "Zedd ft. Foxes",
+          title: "Clarity",
+          cat: "EDM Sub-Bass and Stereo Synths",
+          hint: "Deep 40 Hz sub-bass drop, sidechain pumping, and wide stereo synth separation.",
+          cover: "covers/song4.jpg",
+          files: {
+            flac: "audio/song4_flac.flac",
+            aac256: "audio/song4_aac256.m4a",
+            opus128: "audio/song4_opus128.opus",
+            mp3128: "audio/song4_mp3128.mp3"
+          }
+        },
+        {
+          id: 12,
+          artist: "Alan Walker",
+          title: "Faded",
+          cat: "EDM Sub-Bass and Stereo Synths",
+          hint: "35 Hz sub-bass drop, wide stereophonic synths, and vocal reverb tails.",
+          cover: "covers/song12.jpg",
+          files: {
+            flac: "audio/song12_flac.flac",
+            aac256: "audio/song12_aac256.m4a",
+            opus128: "audio/song12_opus128.opus",
+            mp3128: "audio/song12_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "Funk Groove and Sharp Horns",
+      contenders: [
+        {
+          id: 5,
+          artist: "Bruno Mars",
+          title: "24K Magic",
+          cat: "Funk Groove and Sharp Horns",
+          hint: "Snappy slap bass transients, 80s drum machine crack, and bright horn fanfares.",
+          cover: "covers/song5.jpg",
+          files: {
+            flac: "audio/song5_flac.flac",
+            aac256: "audio/song5_aac256.m4a",
+            opus128: "audio/song5_opus128.opus",
+            mp3128: "audio/song5_mp3128.mp3"
+          }
+        },
+        {
+          id: 13,
+          artist: "Daft Punk",
+          title: "Get Lucky",
+          cat: "Funk Groove and Sharp Horns",
+          hint: "Nile Rodgers funk guitar strum transients and punchy disco bassline.",
+          cover: "covers/song13.jpg",
+          files: {
+            flac: "audio/song13_flac.flac",
+            aac256: "audio/song13_aac256.m4a",
+            opus128: "audio/song13_opus128.opus",
+            mp3128: "audio/song13_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "Modern Polished Pop",
+      contenders: [
+        {
+          id: 6,
+          artist: "Dua Lipa",
+          title: "Don't Start Now",
+          cat: "Modern Polished Pop",
+          hint: "Nu-disco bassline groove, crisp handclaps, and multi-tracked vocal layers.",
+          cover: "covers/song6.jpg",
+          files: {
+            flac: "audio/song6_flac.flac",
+            aac256: "audio/song6_aac256.m4a",
+            opus128: "audio/song6_opus128.opus",
+            mp3128: "audio/song6_mp3128.mp3"
+          }
+        },
+        {
+          id: 14,
+          artist: "Ariana Grande",
+          title: "7 rings",
+          cat: "Modern Polished Pop",
+          hint: "Deep 808 sub-bass, rapid trap hi-hat rolls, and close-mic airy vocal harmonies.",
+          cover: "covers/song14.jpg",
+          files: {
+            flac: "audio/song14_flac.flac",
+            aac256: "audio/song14_aac256.m4a",
+            opus128: "audio/song14_opus128.opus",
+            mp3128: "audio/song14_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "Symphony Orchestra and Chimes",
+      contenders: [
+        {
+          id: 7,
+          artist: "John Williams",
+          title: "Carol of the Bells",
+          cat: "Symphony Orchestra and Chimes",
+          hint: "High-frequency glockenspiel overtone decay and massed acoustic string sections.",
+          cover: "covers/song7.jpg",
+          files: {
+            flac: "audio/song7_flac.flac",
+            aac256: "audio/song7_aac256.m4a",
+            opus128: "audio/song7_opus128.opus",
+            mp3128: "audio/song7_mp3128.mp3"
+          }
+        },
+        {
+          id: 15,
+          artist: "Trans-Siberian Orchestra",
+          title: "Christmas Eve / Sarajevo 12/24",
+          cat: "Symphony Orchestra and Chimes",
+          hint: "Glockenspiel bell harmonics colliding with electric guitars and orchestral strings.",
+          cover: "covers/song15.jpg",
+          files: {
+            flac: "audio/song15_flac.flac",
+            aac256: "audio/song15_aac256.m4a",
+            opus128: "audio/song15_opus128.opus",
+            mp3128: "audio/song15_mp3128.mp3"
+          }
+        }
+      ]
+    },
+    {
+      category: "Hyper-Dense Fast J-Pop",
+      contenders: [
+        {
+          id: 8,
+          artist: "YOASOBI",
+          title: "Adventure",
+          cat: "Hyper-Dense Fast J-Pop",
+          hint: "Dense wall of sound: rapid piano arpeggios, fast electronic kick, and vocal stacks.",
+          cover: "covers/song8.jpg",
+          files: {
+            flac: "audio/song8_flac.flac",
+            aac256: "audio/song8_aac256.m4a",
+            opus128: "audio/song8_opus128.opus",
+            mp3128: "audio/song8_mp3128.mp3"
+          }
+        },
+        {
+          id: 16,
+          artist: "Mrs. GREEN APPLE",
+          title: "Soranji",
+          cat: "Hyper-Dense Fast J-Pop",
+          hint: "Dense wall of sound: soaring vocal vibrato over high-tempo orchestral rock arrangement.",
+          cover: "covers/song16.jpg",
+          files: {
+            flac: "audio/song16_flac.flac",
+            aac256: "audio/song16_aac256.m4a",
+            opus128: "audio/song16_opus128.opus",
+            mp3128: "audio/song16_mp3128.mp3"
+          }
+        }
+      ]
+    }
+  ];
+
+  const I = {
+    play:   '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>',
+    pause:  '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+    check:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
+    cross:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    checkC: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="16 9 10 15 7 12"/></svg>',
+    crossC: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    chev:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>'
+  };
+
+  /* Helpers */
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmt = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+  const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  const announce = m => { $('#live').textContent = ''; setTimeout(() => $('#live').textContent = m, 50); };
+
+  function shuffle(a) {
+    const r = [...a];
+    for (let i = r.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [r[i], r[j]] = [r[j], r[i]];
+    }
+    return r;
+  }
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
+  }
 
-    // Current selection index (0 for Contender A, 1 for Contender B) across all 8 acoustic categories
-    let selectedContenderIdx = [0, 0, 0, 0, 0, 0, 0, 0];
-    let shuffledQuestions = [];
-    let currentPlaying = null; // { qIdx, sIdx, audio }
-    let userPicks = {}; // { qIdx: { key, sIdx } }
-    let testSubmitted = false;
-
-    function shuffle(array) {
-      const arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
+  /* Generate 96 height bars per song */
+  function getWaveBars(songId) {
+    const r = rng(songId * 977 + 13), n = 96; let env = .5; const out = [];
+    for (let k = 0; k < n; k++) {
+      const sect = .55 + .4 * Math.sin(k / n * Math.PI * 3 + songId);
+      env = Math.max(.25, Math.min(1, env + (r() - .5) * .35));
+      out.push(Math.round(14 + 56 * Math.max(.12, Math.min(1, env * sect * (.7 + r() * .5)))));
     }
+    return out;
+  }
 
-    function initTest(isInitialLoad = false) {
-      if (isInitialLoad) {
-        // Randomly pick Contender A or B for each category on first launch
-        selectedContenderIdx = SONG_CATEGORIES.map(() => Math.random() < 0.5 ? 0 : 1);
-      }
+  /* Audio state and elements cache */
+  const audioMap = new Map(); // key: `${qIdx}-${sIdx}` -> HTMLAudioElement
 
-      const activeSongs = SONG_CATEGORIES.map((cat, idx) => cat.contenders[selectedContenderIdx[idx]]);
+  function getAudioEl(qIdx, sIdx, src) {
+    const key = `${qIdx}-${sIdx}`;
+    if (!audioMap.has(key)) {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.src = src;
 
-      shuffledQuestions = activeSongs.map((song, qIdx) => {
-        const formatKeys = ['flac', 'aac256', 'opus128', 'mp3128'];
-        const shuffledKeys = shuffle(formatKeys);
-        return {
-          ...song,
-          qIdx: qIdx,
-          samples: shuffledKeys.map((key, sIdx) => ({
-            key: key,
-            src: song.files[key],
-            label: `Sample ${sIdx + 1}`
-          }))
-        };
-      });
-
-      renderQuestions();
-      updateProgress();
-    }
-
-    function renderQuestions() {
-      const listEl = document.getElementById("questions-list");
-      listEl.innerHTML = "";
-
-      shuffledQuestions.forEach((q, qIdx) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.id = `q-card-${qIdx}`;
-
-        let samplesHtml = "";
-        q.samples.forEach((sample, sIdx) => {
-          samplesHtml += `
-            <div class="sample-row" id="row-${qIdx}-${sIdx}">
-              <button class="play-btn" id="btn-${qIdx}-${sIdx}" onclick="togglePlay(${qIdx}, ${sIdx})">
-                <svg id="icon-${qIdx}-${sIdx}" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </button>
-
-              <div class="sample-info">
-                <div class="sample-title-bar">
-                  <div class="sample-label-wrap">
-                    <span class="sample-label">${sample.label}</span>
-                    <span class="reveal-badge" id="badge-${qIdx}-${sIdx}"></span>
-                  </div>
-                  <span class="time-display" id="time-${qIdx}-${sIdx}">0:00 / 0:30</span>
-                </div>
-                <input type="range" class="scrubber" id="scrub-${qIdx}-${sIdx}" min="0" max="30" step="0.1" value="0" oninput="onScrub(${qIdx}, ${sIdx}, this.value)">
-              </div>
-
-              <div class="pick-col">
-                <button class="npr-pick-box" id="pickbox-${qIdx}-${sIdx}" onclick="makePick(${qIdx}, ${sIdx})" title="Select as highest quality audio">
-                  <span class="pick-icon" id="pickicon-${qIdx}-${sIdx}"></span>
-                </button>
-              </div>
-
-              <audio id="audio-${qIdx}-${sIdx}" src="${sample.src}" preload="auto" ontimeupdate="onTimeUpdate(${qIdx}, ${sIdx})" onended="onAudioEnded(${qIdx}, ${sIdx})"></audio>
-            </div>
-          `;
-        });
-
-        card.innerHTML = `
-          <div class="card-header">
-            <span>QUESTION ${qIdx + 1} OF ${shuffledQuestions.length}</span>
-            <span id="status-${qIdx}" style="font-weight: 600; color: #5f6368;">Pick the sample you think is highest quality</span>
-          </div>
-          <div class="card-body">
-            <div class="meta-col">
-              <img src="${q.cover}" class="cover-art" alt="${q.title}">
-              <div class="artist-name">${q.artist}</div>
-              <div class="song-title">‘${q.title}’</div>
-              <div class="challenge-tag">
-                <strong>Focus: ${q.category}</strong>
-                ${q.challenge}
-              </div>
-            </div>
-            <div class="player-col">
-              <div class="player-col-header">
-                <span class="player-col-label">BLIND SAMPLES</span>
-                <span class="your-pick-label">YOUR PICK</span>
-              </div>
-              ${samplesHtml}
-            </div>
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
-    }
-
-    function togglePlay(qIdx, sIdx) {
-      const audioEl = document.getElementById(`audio-${qIdx}-${sIdx}`);
-      const btnIcon = document.getElementById(`icon-${qIdx}-${sIdx}`);
-      const row = document.getElementById(`row-${qIdx}-${sIdx}`);
-      const isSync = document.getElementById("sync-toggle") ? document.getElementById("sync-toggle").checked : true;
-
-      // If clicking currently playing audio, toggle pause
-      if (currentPlaying && currentPlaying.qIdx === qIdx && currentPlaying.sIdx === sIdx) {
-        if (!audioEl.paused) {
-          audioEl.pause();
-          btnIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
-          row.classList.remove("playing");
-          return;
-        } else {
-          audioEl.play();
-          btnIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-          row.classList.add("playing");
+      audio.addEventListener('timeupdate', () => {
+        const q = S.qs[qIdx];
+        if (!q || q.cur !== sIdx || !S.playing) return;
+        q.pos = Math.min(30, audio.currentTime);
+        q.heardT[sIdx] += 0.25;
+        if (q.heardT[sIdx] >= 2.0 && !q.heard.has(sIdx)) {
+          q.heard.add(sIdx);
+          render();
           return;
         }
-      }
+        paint();
+      });
 
-      // Switching between samples
-      let resumeTime = 0;
-      if (currentPlaying) {
-        const prevAudio = currentPlaying.audio;
-        if (isSync && currentPlaying.qIdx === qIdx) {
-          resumeTime = prevAudio.currentTime;
-        } else if (!isSync && currentPlaying.qIdx === qIdx) {
-          resumeTime = audioEl.currentTime || 0;
-        }
-        prevAudio.pause();
-        document.getElementById(`icon-${currentPlaying.qIdx}-${currentPlaying.sIdx}`).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
-        document.getElementById(`row-${currentPlaying.qIdx}-${currentPlaying.sIdx}`).classList.remove("playing");
-      } else {
-        resumeTime = audioEl.currentTime || 0;
-      }
+      audio.addEventListener('ended', () => {
+        const q = S.qs[qIdx];
+        if (!q) return;
+        S.playing = false;
+        q.pos = 0;
+        audio.currentTime = 0;
+        render();
+      });
 
-      audioEl.currentTime = resumeTime;
-      audioEl.play();
-      btnIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-      row.classList.add("playing");
-      currentPlaying = { qIdx, sIdx, audio: audioEl };
-    }
-
-    function onTimeUpdate(qIdx, sIdx) {
-      if (!currentPlaying || currentPlaying.qIdx !== qIdx || currentPlaying.sIdx !== sIdx) return;
-      const audio = currentPlaying.audio;
-      const cur = audio.currentTime;
-      const dur = audio.duration || 30;
-      const isSync = document.getElementById("sync-toggle") ? document.getElementById("sync-toggle").checked : true;
-
-      const formatTime = (t) => {
-        const m = Math.floor(t / 60);
-        const s = Math.floor(t % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-      };
-
-      if (isSync) {
-        // Synchronize scrubber & time display across all 4 samples in this question
-        for (let i = 0; i < 4; i++) {
-          const timeEl = document.getElementById(`time-${qIdx}-${i}`);
-          const scrubEl = document.getElementById(`scrub-${qIdx}-${i}`);
-          if (timeEl) timeEl.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
-          if (scrubEl) scrubEl.value = cur;
-        }
-      } else {
-        const timeEl = document.getElementById(`time-${qIdx}-${sIdx}`);
-        const scrubEl = document.getElementById(`scrub-${qIdx}-${sIdx}`);
-        if (timeEl) timeEl.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
-        if (scrubEl) scrubEl.value = cur;
-      }
-    }
-
-    function onScrub(qIdx, sIdx, val) {
-      const targetTime = parseFloat(val);
-      const isSync = document.getElementById("sync-toggle") ? document.getElementById("sync-toggle").checked : true;
-
-      const formatTime = (t) => {
-        const m = Math.floor(t / 60);
-        const s = Math.floor(t % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-      };
-
-      if (isSync) {
-        if (currentPlaying && currentPlaying.qIdx === qIdx) {
-          currentPlaying.audio.currentTime = targetTime;
-        } else {
-          const audioEl = document.getElementById(`audio-${qIdx}-${sIdx}`);
-          audioEl.currentTime = targetTime;
-        }
-        for (let i = 0; i < 4; i++) {
-          const scrubEl = document.getElementById(`scrub-${qIdx}-${i}`);
-          if (scrubEl) scrubEl.value = targetTime;
-          const timeEl = document.getElementById(`time-${qIdx}-${i}`);
-          if (timeEl) timeEl.textContent = `${formatTime(targetTime)} / 0:30`;
-        }
-      } else {
-        const audioEl = document.getElementById(`audio-${qIdx}-${sIdx}`);
-        audioEl.currentTime = targetTime;
-        const timeEl = document.getElementById(`time-${qIdx}-${sIdx}`);
-        if (timeEl) timeEl.textContent = `${formatTime(targetTime)} / 0:30`;
-      }
-    }
-
-    function onAudioEnded(qIdx, sIdx) {
-      document.getElementById(`icon-${qIdx}-${sIdx}`).innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
-      document.getElementById(`row-${qIdx}-${sIdx}`).classList.remove("playing");
-      currentPlaying = null;
-    }
-
-    function makePick(qIdx, sIdx) {
-      if (userPicks[qIdx]) return; // already picked this question
-
-      const q = shuffledQuestions[qIdx];
-      const pickedSample = q.samples[sIdx];
-      userPicks[qIdx] = { key: pickedSample.key, sIdx: sIdx };
-
-      // Reveal answers immediately for this question
-      q.samples.forEach((sample, i) => {
-        const badge = document.getElementById(`badge-${qIdx}-${i}`);
-        const box = document.getElementById(`pickbox-${qIdx}-${i}`);
-        const icon = document.getElementById(`pickicon-${qIdx}-${i}`);
-        const row = document.getElementById(`row-${qIdx}-${i}`);
-
-        // Show audio format name
-        badge.textContent = FORMAT_NAMES[sample.key];
-        badge.className = `reveal-badge badge-${sample.key}`;
-        badge.style.display = "inline-block";
-
-        box.disabled = true;
-
-        if (sample.key === 'flac') {
-          // Correct FLAC master: NPR solid green with white checkmark
-          box.classList.add("correct");
-          icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-          row.classList.add("correct-answer");
-        } else if (i === sIdx) {
-          // User\'s wrong pick: NPR solid red with white X
-          box.classList.add("wrong");
-          icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-          row.classList.add("wrong-answer");
-        } else {
-          // Neutral unpicked option
-          box.classList.add("neutral");
+      audio.addEventListener('error', (e) => {
+        console.error(`Audio loading error on Q${qIdx + 1} Sample ${sIdx + 1}:`, e);
+        const q = S.qs[qIdx];
+        if (q) {
+          q.load[sIdx] = 'error';
+          if (q.cur === sIdx) S.playing = false;
+          render();
         }
       });
 
-      // Update card header status
-      const statusEl = document.getElementById(`status-${qIdx}`);
-      if (pickedSample.key === 'flac') {
-        statusEl.innerHTML = "<span style='color: #2e7d32; font-weight: 700;'>Correct! You identified the highest quality audio (Lossless FLAC).</span>";
+      audioMap.set(key, audio);
+    }
+    return audioMap.get(key);
+  }
+
+  function pauseAllAudio() {
+    audioMap.forEach(a => {
+      if (!a.paused) a.pause();
+    });
+  }
+
+  /* State */
+  let S;
+  let selectedContenderIdx = [0, 0, 0, 0, 0, 0, 0, 0];
+
+  function makeState(reshuffleContenders = false) {
+    pauseAllAudio();
+    audioMap.clear();
+
+    if (reshuffleContenders) {
+      // Pick random 0 or 1 for each category
+      selectedContenderIdx = selectedContenderIdx.map(current => Math.random() > 0.5 ? 1 : 0);
+    }
+
+    const activeSongs = SONG_CATEGORIES.map((cat, idx) => {
+      const cIdx = selectedContenderIdx[idx] || 0;
+      return cat.contenders[cIdx];
+    });
+
+    const qs = activeSongs.map((s, i) => ({
+      ...s,
+      i,
+      order: shuffle(KEYS),
+      pick: null,
+      locked: false,
+      heard: new Set(),
+      heardT: [0, 0, 0, 0],
+      load: ['ready', 'ready', 'ready', 'ready'],
+      pos: 0,
+      posS: [0, 0, 0, 0],
+      cur: null,
+      waveBars: getWaveBars(s.id)
+    }));
+
+    return { qs, open: 0, playing: false, sync: true };
+  }
+
+  /* Rendering Components */
+  function sampleHTML(q, s) {
+    const key = q.order[s], c = CODECS[key], st = q.load[s];
+    const active = q.cur === s, playingNow = active && S.playing, reveal = q.locked;
+    const isFlac = key === 'flac', isWrong = reveal && q.pick === s && !isFlac;
+    const cls = ['s', active ? 'active' : '', reveal ? 'reveal' : '', reveal && isFlac ? 'is-flac' : '', isWrong ? 'is-wrong' : ''].filter(Boolean).join(' ');
+
+    const badge = playingNow ? '<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>' : (s + 1);
+    let top = `<span class="s-label">Sample ${s + 1}</span>`;
+    if (reveal) top += `<span class="s-codec"><b>${c.name}</b>${c.service}</span>`;
+
+    let line;
+    if (reveal) {
+      line = `<span class="rate"><span class="bar-r"><i style="width:${Math.max(8, c.kbps / 700 * 100)}%"></i></span><span>${c.label}</span></span>`;
+    } else if (st === 'error') {
+      line = `<span class="s-state err">Could not load this audio sample. <button class="link" data-act="retry" data-s="${s}">Retry</button></span>`;
+    } else if (playingNow) {
+      line = '<span class="s-state now">Playing</span>';
+    } else if (active) {
+      line = '<span class="s-state">Selected, paused</span>';
+    } else {
+      line = `<span class="s-state">${q.heard.has(s) ? 'Heard' : 'Not heard yet'}</span>`;
+    }
+
+    let mark = '';
+    if (reveal) {
+      if (q.pick === s && isFlac) mark = `<span class="mark ok">${I.checkC}<span>Correct</span></span>`;
+      else if (q.pick === s) mark = `<span class="mark no">${I.crossC}<span>Your pick</span></span>`;
+      else if (isFlac) mark = `<span class="mark ok">${I.checkC}<span>Lossless</span></span>`;
+    }
+    const inner = `<span class="badge-n">${badge}</span><span class="s-top">${top}</span>${line}${mark}`;
+    const main = st === 'error'
+      ? `<div class="s-main">${inner}</div>`
+      : `<button class="s-main" data-act="listen" data-s="${s}" data-fid="s-${q.i}-${s}" aria-pressed="${active}" aria-label="Listen to sample ${s + 1}"><span class="sr-only">Listen to sample ${s + 1}</span>${inner}</button>`;
+
+    let side = '';
+    if (!reveal) {
+      const on = q.pick === s;
+      side = `<button class="pick" data-act="pick" data-s="${s}" data-fid="pick-${q.i}-${s}" aria-pressed="${on}">
+        ${on ? I.check : ''}<span>${on ? 'Picked' : 'Pick'}</span>
+      </button>`;
+    }
+    return `<li class="${cls}">${main}${side}</li>`;
+  }
+
+  function bodyHTML(q) {
+    const bars = q.waveBars.map(h => `<i style="height:${h}px"></i>`).join('');
+    const p = (q.pos / 30 * 100).toFixed(2) + '%';
+    const flacIdx = q.order.indexOf('flac');
+    let foot;
+    if (q.locked) {
+      const pk = q.order[q.pick], good = pk === 'flac';
+      const allDone = S.qs.every(x => x.locked);
+      foot = good
+        ? `<div class="outcome ok">${I.checkC}<div><b>Correct.</b> Sample ${flacIdx + 1} was the lossless version. You spotted the uncompressed master.</div></div>`
+        : `<div class="outcome no">${I.crossC}<div><b>Not this time.</b> You picked ${CODECS[pk].name} (${CODECS[pk].service}). Sample ${flacIdx + 1} was the lossless version.</div></div>`;
+      foot += `<div class="outcome-row"><button class="btn btn-primary" data-act="next" data-fid="next-${q.i}">${allDone ? 'See results' : 'Next song'}</button></div>`;
+    } else {
+      const msg = q.pick === null
+        ? `Heard ${q.heard.size} of 4. Listen to each, then pick the one you think is highest quality.`
+        : `Sample ${q.pick + 1} picked. Heard ${q.heard.size} of 4. Click confirm to reveal the answer.`;
+      foot = `<div class="foot"><span class="foot-msg">${msg}</span><button class="btn btn-primary" data-act="lock" data-fid="lock-${q.i}" ${q.pick === null ? 'disabled' : ''}>Confirm pick</button></div>`;
+    }
+    return `
+      <p class="hint"><b>Listen for:</b>${esc(q.hint)}</p>
+      <div class="wave" id="wave-${q.i}" data-fid="wave-${q.i}" role="slider" tabindex="0" aria-label="Seek position in track" aria-valuemin="0" aria-valuemax="30" aria-valuenow="${Math.round(q.pos)}" aria-valuetext="${fmt(q.pos)} of 0:30" style="--p:${p}">
+        <div class="wave-layer" aria-hidden="true">${bars}</div>
+        <div class="wave-layer played" aria-hidden="true">${bars}</div>
+        <div class="playhead"></div>
+      </div>
+      <div class="transport">
+        <button class="play" data-act="toggle" data-fid="play-${q.i}" aria-label="${S.playing && q.cur !== null ? 'Pause' : 'Play'}">
+          ${S.playing && q.cur !== null ? I.pause : I.play}
+        </button>
+        <div class="time" id="time-${q.i}"><b>${fmt(q.pos)}</b> / 0:30</div>
+        <label class="sync"><input type="checkbox" role="switch" data-act="sync" data-fid="sync" ${S.sync ? 'checked' : ''}><span class="track"></span><span>Keep position when switching</span></label>
+      </div>
+      <ul class="samples">${q.order.map((_, s) => sampleHTML(q, s)).join('')}</ul>
+      ${foot}`;
+  }
+
+  function qHTML(q) {
+    const open = S.open === q.i;
+    let status;
+    if (q.locked) {
+      const pk = q.order[q.pick];
+      status = pk === 'flac'
+        ? `<span class="q-status ok">${I.check} Correct</span>`
+        : `<span class="q-status no">${I.cross} Picked ${CODECS[pk].name}</span>`;
+    } else {
+      status = open ? '<span class="q-status now">Listening</span>' : '<span class="q-status">Not answered</span>';
+    }
+    return `<li class="q${open ? ' open' : ''}" id="q-${q.i}">
+      <h3 class="q-h"><button class="q-head" data-act="open" data-q="${q.i}" data-fid="head-${q.i}" aria-expanded="${open}">
+        <span class="q-num">${q.i + 1}</span>
+        <span class="thumb"><img src="${q.cover}" class="thumb-img" alt="${esc(q.title)} album art"></span>
+        <span class="q-main"><span class="q-title">${esc(q.title)}</span><span class="q-sub">${esc(q.artist)} &middot; ${esc(q.cat)}</span></span>
+        ${status}
+        <span class="chev">${I.chev}</span>
+      </button></h3>
+      ${open ? `<div class="q-body" id="qb-${q.i}">${bodyHTML(q)}</div>` : ''}
+    </li>`;
+  }
+
+  function renderBar() {
+    const lockedCount = S.qs.filter(q => q.locked).length;
+    $('#segs').innerHTML = S.qs.map((q, i) => {
+      const c = q.locked ? 'done' : (i === S.open ? 'current' : '');
+      return `<div class="seg ${c}"></div>`;
+    }).join('');
+    const correctCount = S.qs.filter(q => q.locked && q.order[q.pick] === 'flac').length;
+    $('#progress-text').innerHTML = `<span class="full">Answered </span>${lockedCount} of 8 (${correctCount} correct)`;
+    $('#progress').setAttribute('aria-valuenow', lockedCount);
+  }
+
+  function renderResults() {
+    const allDone = S.qs.every(x => x.locked);
+    const r = $('#results');
+    if (!allDone) { r.hidden = true; r.innerHTML = ''; return; }
+    r.hidden = false;
+
+    const score = S.qs.filter(q => q.order[q.pick] === 'flac').length;
+    const pct = Math.round(score / 8 * 100);
+
+    const cells = Array.from({ length: 9 }, (_, i) => {
+      const isYou = i === score, isChance = i === 2, upto = i < score;
+      const cls = ['cell', upto ? 'upto' : '', isYou ? 'you' : '', isChance ? 'chance' : ''].filter(Boolean).join(' ');
+      return `<div class="${cls}" title="${i} of 8 correct${isChance ? ' (chance level)' : ''}">${i}</div>`;
+    }).join('');
+
+    let verdict;
+    if (score >= 7) {
+      verdict = `<b>Exceptional critical listening.</b> You correctly spotted the uncompressed master in ${score} of 8 tracks. Your playback setup and critical ear distinguish subtle high-frequency nuance with high confidence.`;
+    } else if (score >= 4) {
+      verdict = `<b>Sharp critical listener.</b> You scored ${score} of 8, reliably identifying lower-bitrate compression artifacts like MP3, while finding modern 256 kbps AAC close to the lossless master.`;
+    } else {
+      verdict = `<b>Natural human hearing.</b> You scored ${score} of 8 (baseline random guessing is 2 of 8). Modern audio codecs like 256 kbps AAC and 128 kbps Opus are designed to be perceptually transparent, discarding frequencies inaudible under normal conditions.`;
+    }
+
+    const songsHTML = S.qs.map(q => {
+      const pk = q.order[q.pick], good = pk === 'flac';
+      const c = CODECS[pk];
+      return `<li>
+        <span class="mk ${good ? 'ok' : 'no'}">${good ? I.check : I.cross}</span>
+        <div><b>${esc(q.title)}</b><span class="sub">${esc(q.artist)} &middot; You picked ${c.name} (${c.service})</span></div>
+      </li>`;
+    }).join('');
+
+    const tally = { flac: 0, aac256: 0, opus128: 0, mp3128: 0 };
+    S.qs.forEach(q => { tally[q.order[q.pick]]++; });
+    const tallyHTML = KEYS.map(k => {
+      const c = CODECS[k], n = tally[k], w = (n / 8 * 100).toFixed(1);
+      return `<li>
+        <div class="t-top"><b>${c.name} (${c.service})</b><span>${n} of 8 (${w}%)</span></div>
+        <div class="t-bar"><i class="${k === 'flac' ? 'lossless' : ''}" style="width:${w}%"></i></div>
+      </li>`;
+    }).join('');
+
+    r.innerHTML = `
+      <h2 id="r-title">You identified the lossless version in ${score} of 8 songs (${pct}%)</h2>
+      <p class="r-sub">Chance level is 2 of 8 (25% on a 4-choice test).</p>
+      <div class="scale">${cells}</div>
+      <ul class="legend">
+        <li><span class="lg you"></span> Your score (${score}/8)</li>
+        <li><span class="lg chance"></span> Pure chance (2/8)</li>
+      </ul>
+      <div class="verdict">${verdict}</div>
+      <div class="r-grid">
+        <section><h3>Your answers</h3><ul class="songs">${songsHTML}</ul></section>
+        <section><h3>What you picked as highest quality</h3><ul class="tally">${tallyHTML}</ul></section>
+      </div>
+      <p class="fine">Samples are encoded from the same lossless source at bitrates similar to popular streaming services. Not captured from live streaming feeds.</p>
+      <div class="r-actions">
+        <button class="btn btn-primary" data-r="again">Try again with new songs</button>
+        <button class="btn btn-quiet" data-r="copy">Copy result</button>
+      </div>`;
+  }
+
+  function render() {
+    const a = document.activeElement;
+    const fid = a && a.dataset ? a.dataset.fid : null;
+    $('#qlist').innerHTML = S.qs.map(qHTML).join('');
+    renderBar();
+    renderResults();
+    if (fid) {
+      const el = document.querySelector(`[data-fid="${fid}"]`);
+      if (el) el.focus({ preventScroll: true });
+    }
+  }
+
+  function paint() {
+    const q = S.qs[S.open]; if (!q) return;
+    const w = $(`#wave-${q.i}`); if (!w) return;
+    w.style.setProperty('--p', (q.pos / 30 * 100) + '%');
+    w.setAttribute('aria-valuenow', Math.round(q.pos));
+    w.setAttribute('aria-valuetext', `${fmt(q.pos)} of 0:30`);
+    $(`#time-${q.i}`).innerHTML = `<b>${fmt(q.pos)}</b> / 0:30`;
+  }
+
+  /* Audio playback engine */
+  function listen(q, s) {
+    if (q.load[s] !== 'ready') return;
+    const prevCur = q.cur;
+
+    // Pause any currently playing audio across all questions
+    pauseAllAudio();
+
+    if (prevCur !== null && prevCur !== s && !S.sync) {
+      q.posS[prevCur] = q.pos;
+      q.pos = q.posS[s];
+    }
+    if (q.pos >= 30) q.pos = 0;
+    q.cur = s;
+
+    const audio = getAudioEl(q.i, s, q.files[q.order[s]]);
+    if (audio) {
+      if (audio.readyState >= 1) {
+        audio.currentTime = q.pos;
       } else {
-        statusEl.innerHTML = `<span style='color: #d93025; font-weight: 700;'>Incorrect. You picked ${FORMAT_NAMES[pickedSample.key]}.</span>`;
+        audio.addEventListener('loadedmetadata', () => {
+          audio.currentTime = q.pos;
+        }, { once: true });
       }
-
-      updateProgress();
-
-      // If all questions are answered, show final results summary
-      if (Object.keys(userPicks).length === shuffledQuestions.length) {
-        showFinalResults();
-      }
-    }
-
-    function updateProgress() {
-      const answeredCount = Object.keys(userPicks).length;
-      const total = shuffledQuestions.length;
-      let correctSoFar = 0;
-      Object.values(userPicks).forEach(p => {
-        if (p.key === 'flac') correctSoFar++;
+      audio.play().then(() => {
+        S.playing = true;
+        render();
+      }).catch(err => {
+        console.warn('Audio play prevented or interrupted:', err);
+        S.playing = false;
+        render();
       });
-      document.getElementById("progress-text").textContent = `Answered ${answeredCount} of ${total} (${correctSoFar} Correct)`;
-      document.getElementById("progress-fill").style.width = `${(answeredCount / total) * 100}%`;
     }
+  }
 
-    function showFinalResults() {
-      testSubmitted = true;
-      let correct = 0;
-      let wrong = 0;
-      const breakdown = { flac: 0, aac256: 0, opus128: 0, mp3128: 0 };
-
-      shuffledQuestions.forEach((q, qIdx) => {
-        const pick = userPicks[qIdx];
-        if (pick) {
-          breakdown[pick.key]++;
-          if (pick.key === 'flac') {
-            correct++;
-          } else {
-            wrong++;
-          }
+  function toggle(q) {
+    if (q.cur === null) {
+      const s = q.load.findIndex(x => x === 'ready');
+      if (s >= 0) listen(q, s);
+      return;
+    }
+    const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
+    if (S.playing) {
+      if (audio && !audio.paused) audio.pause();
+      S.playing = false;
+      render();
+    } else {
+      if (q.pos >= 30) {
+        q.pos = 0;
+        if (audio) audio.currentTime = 0;
+      }
+      if (audio) {
+        if (audio.readyState >= 1) {
+          audio.currentTime = q.pos;
         }
-      });
-
-      const resultsEl = document.getElementById("results-section");
-      resultsEl.style.display = "block";
-
-      document.getElementById("score-title").textContent = `You got ${wrong} out of 8 wrong!`;
-      document.getElementById("score-subtitle").textContent = `${correct} / 8 Correct (${Math.round((correct / 8) * 100)}% Accuracy)`;
-
-      const profileEl = document.getElementById("score-profile");
-      const textEl = document.getElementById("score-text");
-
-      if (correct >= 7) {
-        profileEl.textContent = "Golden Ears: Mastering Grade";
-        profileEl.style.background = "#e6f4ea";
-        profileEl.style.color = "#137333";
-        textEl.innerHTML = "Exceptional auditory perception! You can reliably distinguish uncompressed studio lossless audio from Apple Music 256 kbps AAC. Your listening setup, playback equipment, and critical ear for subtle acoustic detail are top tier.";
-      } else if (correct >= 4) {
-        profileEl.textContent = "Sharp Critical Listener";
-        profileEl.style.background = "#e8f0fe";
-        profileEl.style.color = "#1a73e8";
-        textEl.innerHTML = "Solid critical listening! You readily identify lower-bitrate compression artifacts like standard MP3 and YouTube Music Opus, though Apple Music 256 kbps AAC proves remarkably close to lossless FLAC in blind listening.";
-      } else {
-        profileEl.textContent = "Perceptually Transparent Baseline";
-        profileEl.style.background = "#fef7e0";
-        profileEl.style.color = "#b06000";
-        textEl.innerHTML = "Completely natural human hearing! In psychoacoustic testing, modern streaming codecs like 256 kbps AAC and 128 kbps Opus are engineered to be <strong>perceptually transparent</strong>, meaning compression algorithms discard inaudible frequencies so effectively that lossy streaming sounds virtually identical to lossless masters for everyday listening.";
-      }
-
-      document.getElementById("stat-flac").textContent = breakdown.flac;
-      document.getElementById("stat-aac256").textContent = breakdown.aac256;
-      document.getElementById("stat-opus128").textContent = breakdown.opus128;
-      document.getElementById("stat-mp3").textContent = breakdown.mp3128;
-
-      resultsEl.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function reshuffleTest(changeSongs = true) {
-      if (currentPlaying) {
-        currentPlaying.audio.pause();
-        currentPlaying = null;
-      }
-      userPicks = {};
-      testSubmitted = false;
-      document.getElementById("results-section").style.display = "none";
-
-      if (changeSongs) {
-        // Change between 3 and 5 songs randomly
-        const numToChange = Math.floor(Math.random() * 3) + 3; // 3, 4, or 5
-        const categoryIndices = shuffle([0, 1, 2, 3, 4, 5, 6, 7]).slice(0, numToChange);
-
-        categoryIndices.forEach(catIdx => {
-          selectedContenderIdx[catIdx] = selectedContenderIdx[catIdx] === 0 ? 1 : 0;
+        audio.play().then(() => {
+          S.playing = true;
+          render();
+        }).catch(err => {
+          console.warn('Audio play prevented or interrupted:', err);
+          S.playing = false;
+          render();
         });
       }
-
-      initTest(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
 
-    function resetTest() {
-      reshuffleTest(true);
+  /* Actions */
+  function lock(q) {
+    if (q.pick === null) return;
+    q.locked = true;
+    const good = q.order[q.pick] === 'flac';
+    announce(good ? 'Correct. You picked the lossless version.' : `Not this time. You picked ${CODECS[q.order[q.pick]].name}.`);
+    render();
+  }
+
+  function next() {
+    pauseAllAudio();
+    S.playing = false;
+    if (S.qs.every(x => x.locked)) {
+      render();
+      $('#results').scrollIntoView({ behavior: smooth(), block: 'start' });
+      return;
     }
+    let n = S.qs.findIndex((x, i) => i > S.open && !x.locked);
+    if (n < 0) n = S.qs.findIndex(x => !x.locked);
+    S.open = n;
+    render();
+    $('#q-' + n).scrollIntoView({ behavior: smooth(), block: 'start' });
+  }
 
-    window.addEventListener("DOMContentLoaded", () => initTest(true));
-  </script>
+  $('#qlist').addEventListener('click', e => {
+    const t = e.target.closest('[data-act]'); if (!t) return;
+    const act = t.dataset.act;
+    const li = t.closest('.q'); const q = S.qs[li ? +li.id.slice(2) : S.open];
+    if (act === 'open') {
+      const i = +t.dataset.q;
+      pauseAllAudio();
+      S.playing = false;
+      S.open = S.open === i ? -1 : i;
+      render();
+    }
+    else if (act === 'toggle') toggle(q);
+    else if (act === 'listen') listen(q, +t.dataset.s);
+    else if (act === 'pick') { q.pick = +t.dataset.s; render(); }
+    else if (act === 'lock') lock(q);
+    else if (act === 'next') next();
+    else if (act === 'retry') {
+      const s = +t.dataset.s;
+      q.load[s] = 'ready';
+      listen(q, s);
+    }
+  });
+
+  $('#qlist').addEventListener('change', e => {
+    if (e.target.dataset.act !== 'sync') return;
+    S.sync = e.target.checked;
+    const q = S.qs[S.open];
+    if (q && q.cur !== null) q.posS[q.cur] = q.pos;
+  });
+
+  /* Waveform seeking */
+  let dragging = null;
+  function seekFrom(e, w) {
+    const r = w.getBoundingClientRect();
+    const q = S.qs[S.open]; if (!q) return;
+    const target = Math.max(0, Math.min(30, (e.clientX - r.left) / r.width * 30));
+    q.pos = target;
+    if (q.cur !== null) {
+      q.posS[q.cur] = target;
+      const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
+      if (audio && audio.readyState >= 1) audio.currentTime = target;
+    }
+    // Also sync all ready audio elements in this question if sync is enabled
+    if (S.sync) {
+      q.order.forEach((k, s) => {
+        const a = audioMap.get(`${q.i}-${s}`);
+        if (a && a.readyState >= 1) a.currentTime = target;
+      });
+    }
+    paint();
+  }
+
+  $('#qlist').addEventListener('pointerdown', e => {
+    const w = e.target.closest('.wave'); if (!w) return;
+    dragging = w;
+    seekFrom(e, w);
+  });
+  window.addEventListener('pointermove', e => { if (dragging) seekFrom(e, dragging); });
+  window.addEventListener('pointerup', () => { dragging = null; });
+
+  $('#qlist').addEventListener('keydown', e => {
+    const w = e.target.closest('.wave'); if (!w) return;
+    const q = S.qs[S.open];
+    const d = { ArrowLeft: -1, ArrowRight: 1, PageDown: -5, PageUp: 5 }[e.key];
+    if (d !== undefined) q.pos = Math.max(0, Math.min(30, q.pos + d));
+    else if (e.key === 'Home') q.pos = 0;
+    else if (e.key === 'End') q.pos = 30;
+    else return;
+    if (q.cur !== null) {
+      const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
+      if (audio && audio.readyState >= 1) audio.currentTime = q.pos;
+    }
+    if (S.sync) {
+      q.order.forEach((k, s) => {
+        const a = audioMap.get(`${q.i}-${s}`);
+        if (a && a.readyState >= 1) a.currentTime = q.pos;
+      });
+    }
+    e.preventDefault();
+    paint();
+  });
+
+  /* Results actions */
+  $('#results').addEventListener('click', e => {
+    const t = e.target.closest('[data-r]'); if (!t) return;
+    if (t.dataset.r === 'again') {
+      S = makeState(true);
+      render();
+      window.scrollTo({ top: 0, behavior: smooth() });
+    }
+    if (t.dataset.r === 'copy') {
+      const score = S.qs.filter(q => q.order[q.pick] === 'flac').length;
+      const text = `I identified the lossless version in ${score} of 8 songs on the Blind Audio Test: https://blind-audio-test.sharkintheatlantis.workers.dev/`;
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => {
+        t.textContent = 'Copied to clipboard';
+      }).catch(() => {
+        t.textContent = 'Score: ' + score + '/8';
+      });
+      setTimeout(() => { t.textContent = 'Copy result'; }, 2500);
+    }
+  });
+
+  /* Reshuffle modal dialog */
+  const dlg = $('#dlg');
+  $('#reshuffle').addEventListener('click', () => {
+    const n = S.qs.filter(q => q.locked).length;
+    if (!n) {
+      S = makeState(true);
+      render();
+      return;
+    }
+    $('#dlg-text').textContent = `Your ${n} ${n === 1 ? 'answer' : 'answers'} will be cleared and a new combination of songs will be selected.`;
+    dlg.showModal();
+  });
+  $('#dlg-cancel').addEventListener('click', () => dlg.close());
+  $('#dlg-ok').addEventListener('click', () => {
+    dlg.close();
+    S = makeState(true);
+    render();
+    window.scrollTo({ top: 0, behavior: smooth() });
+  });
+
+  /* Tips persistence */
+  if (localStorage.getItem('blind_test_tips_dismissed') === 'true') {
+    $('#tips').open = false;
+  }
+  $('#tips-ok').addEventListener('click', () => {
+    $('#tips').open = false;
+    localStorage.setItem('blind_test_tips_dismissed', 'true');
+    $('#tips summary').focus();
+  });
+
+  /* Initialize */
+  S = makeState(false);
+  render();
+</script>
 </body>
 </html>
