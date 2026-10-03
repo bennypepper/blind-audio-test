@@ -15,7 +15,10 @@ $RECYCLE.BIN/
 .vscode/
 .idea/
 
-# Node
+# Build artifacts
 node_modules/
 npm-debug.log*
 .wrangler/
+
+# Internal documentation and agent plans
+docs/
