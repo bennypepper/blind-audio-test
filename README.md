@@ -1,6 +1,6 @@
 # Blind Audio Quality Test
 
-> **Live Web App:** [https://blind-audio-test.sharkintheatlantis.workers.dev/](https://blind-audio-test.sharkintheatlantis.workers.dev/)
+Live Test: **[https://blind-audio-test.sharkintheatlantis.workers.dev/](https://blind-audio-test.sharkintheatlantis.workers.dev/)**
 
 An NPR-inspired blind audio quality listening test web application. Compare real-world streaming tiers against lossless FLAC across eight diverse acoustic profiles.
 
@@ -38,6 +38,11 @@ Note: Samples are encoded directly from identical lossless FLAC masters using bi
 * Responsive Waveform Scrubber: Interactive seeking via mouse drag, touch, or keyboard arrow keys.
 * Reshuffle Safety: Confirmation dialog prevents accidental loss of active test progress.
 * Zero Dependencies: Plain HTML5 Audio, responsive CSS3, and vanilla JavaScript.
+
+## Live Access
+
+Take the test directly in your web browser:
+[https://blind-audio-test.sharkintheatlantis.workers.dev/](https://blind-audio-test.sharkintheatlantis.workers.dev/)
 
 ## Local Setup
 
