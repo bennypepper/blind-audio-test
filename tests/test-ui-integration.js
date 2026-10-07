@@ -65,7 +65,11 @@ async function runSuite() {
   assert(indexHTML.includes('<!doctype html>'), 'index.html must have HTML5 doctype');
 });
 
-test('index.html includes scientific-stats.js and scientific-audio.js script tags', () => {
+test('index.html includes externalized style.css stylesheet and script tags', () => {
+  assert(
+    indexHTML.includes('<link rel="stylesheet" href="style.css">'),
+    'index.html must link externalized style.css'
+  );
   assert(
     indexHTML.includes('<script src="scientific-stats.js"></script>'),
     'index.html must include <script src="scientific-stats.js"></script>'
@@ -97,6 +101,7 @@ test('index.html top bar contains brand, mode badge, progress bar, reshuffle, an
     'id="progress"',
     'id="segs"',
     'id="progress-text"',
+    'id="btn-top-hotkeys"',
     'id="reshuffle"',
     'id="btn-switch-mode"'
   ];
@@ -141,6 +146,7 @@ test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net 
     'id="sci-hint"',
     'id="sci-wave"',
     'id="sci-time"',
+    'id="btn-sci-play"',
     'id="btn-sci-rewind"',
     'id="btn-sci-seek-back"',
     'id="btn-sci-seek-fwd"',
@@ -148,6 +154,9 @@ test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net 
     'id="btn-source-a"',
     'id="btn-source-x"',
     'id="btn-source-b"',
+    'id="gate-bar-a"',
+    'id="gate-bar-x"',
+    'id="gate-bar-b"',
     'id="gate-a"',
     'id="gate-x"',
     'id="gate-b"',
@@ -223,6 +232,15 @@ test('scientific-audio.js compiles without syntax errors', () => {
   assert.doesNotThrow(() => {
     new vm.Script(code, { filename: 'scientific-audio.js' });
   });
+});
+
+test('style.css exists, contains modernized tokens and has no !important on .btn-accent', () => {
+  const stylePath = path.join(ROOT_DIR, 'style.css');
+  assert(fs.existsSync(stylePath), 'style.css must exist');
+  const css = fs.readFileSync(stylePath, 'utf8');
+  assert(css.includes('--font-mono'), 'style.css must declare --font-mono for tabular timing');
+  assert(css.includes('--audition'), 'style.css must declare --audition for active channel');
+  assert(!css.includes('.btn-accent { background: var(--accent) !important'), '.btn-accent must not have !important overriding disabled state');
 });
 
 // Extract inline script from index.html
