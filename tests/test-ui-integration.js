@@ -128,7 +128,7 @@ test('index.html Mode Select portal contains Unified Test Bench Console with seg
   assert(indexHTML.includes('id="panel-bench-standard"'), 'Must have #panel-bench-standard');
   assert(indexHTML.includes('id="panel-bench-scientific"'), 'Must have #panel-bench-scientific');
   assert(indexHTML.includes('class="signal-chain"'), 'Must have signal architecture chain');
-  assert(indexHTML.includes('class="bench-spec-table"'), 'Must have technical spec table');
+  assert(indexHTML.includes('class="bench-spec-grid') || indexHTML.includes('class="bench-spec-table"'), 'Must have technical spec table/grid');
   assert(indexHTML.includes('class="bench-advisory"'), 'Must have pre-flight advisory box');
 });
 

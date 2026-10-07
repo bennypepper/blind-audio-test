@@ -112,40 +112,44 @@
           </div>
         </div>
 
-        <table class="bench-spec-table">
-          <tbody>
-            <tr>
-              <th scope="row">Methodological Format</th>
-              <td>4-Alternative Forced Choice (MUSHRA-style multi-tier evaluation)</td>
-            </tr>
-            <tr>
-              <th scope="row">Random Chance Baseline (H₀)</th>
-              <td><span class="mono-spec">25.0%</span> random guessing baseline</td>
-            </tr>
-            <tr>
-              <th scope="row">Reference Master</th>
-              <td><span class="mono-spec">16-bit / 44.1 kHz Redbook FLAC (Lossless)</span></td>
-            </tr>
-            <tr>
-              <th scope="row">Simulated Encoders</th>
-              <td><span class="mono-spec">Apple AAC 256k &middot; YouTube Opus 128k &middot; MP3 128k</span></td>
-            </tr>
-            <tr>
-              <th scope="row">Test Battery</th>
-              <td>8 Curated acoustic stress-test genres (vocals, piano, orchestra, EDM, jazz...)</td>
-            </tr>
-            <tr>
-              <th scope="row">Trial Feedback</th>
-              <td>Immediate tier identification and score tally after each song</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="bench-spec-grid bench-spec-table">
+          <div class="spec-item">
+            <span class="spec-label">Methodological Format</span>
+            <span class="spec-val">4-Choice Blind Ranking (MUSHRA-style)</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Random Guess Baseline (H₀)</span>
+            <span class="spec-val"><span class="mono-spec">25.0%</span> random guessing baseline</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Reference Master</span>
+            <span class="spec-val"><span class="mono-spec">16-bit / 44.1 kHz</span> Redbook FLAC (Lossless)</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Simulated Encoders</span>
+            <span class="spec-val"><span class="mono-spec">AAC 256k</span> &middot; <span class="mono-spec">Opus 128k</span> &middot; <span class="mono-spec">MP3 128k</span></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Test Battery</span>
+            <span class="spec-val">8 Curated acoustic stress-test genres</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Playhead Switching</span>
+            <span class="spec-val">Sample-accurate synchronized playhead</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Trial Feedback</span>
+            <span class="spec-val">Immediate tier reveal &amp; score after each song</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Hardware Profile</span>
+            <span class="spec-val">Wired headphones or nearfield monitors</span>
+          </div>
+        </div>
 
         <div class="bench-advisory">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <div>
-            <strong>Acoustic Advisory:</strong> Wired over-ear headphones or calibrated monitors recommended. Disable EQ, volume normalizers, spatial audio, and OS-level enhancements for valid results.
-          </div>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>Pre-Flight Advisory:</strong> Wired over-ear headphones recommended. Disable system-wide equalizers, volume normalizers, spatial audio, and OS-level enhancements for valid results.</span>
         </div>
       </div>
 
@@ -190,48 +194,44 @@
           </div>
         </div>
 
-        <table class="bench-spec-table">
-          <tbody>
-            <tr>
-              <th scope="row">Methodological Format</th>
-              <td>Double-Blind 2-Alternative Forced Choice (2AFC perceptual ABX)</td>
-            </tr>
-            <tr>
-              <th scope="row">Null Hypothesis Rate (H₀)</th>
-              <td><span class="mono-spec">50.0%</span> coin-flip baseline chance</td>
-            </tr>
-            <tr>
-              <th scope="row">Reference Master</th>
-              <td><span class="mono-spec">16-bit / 44.1 kHz Redbook FLAC (Lossless)</span></td>
-            </tr>
-            <tr>
-              <th scope="row">Comparison Target</th>
-              <td>Selected encoder under test (<span class="mono-spec">AAC 256k</span>, <span class="mono-spec">Opus 128k</span>, or <span class="mono-spec">MP3 128k</span>)</td>
-            </tr>
-            <tr>
-              <th scope="row">Blinding Security</th>
-              <td>Hardware CSPRNG (<span class="mono-spec">Web Crypto API</span>) secret assignment encapsulated from DOM</td>
-            </tr>
-            <tr>
-              <th scope="row">Switching &amp; Crossfade</th>
-              <td><span class="mono-spec">10ms</span> equal-power micro-crossfade with synchronous playhead lock</td>
-            </tr>
-            <tr>
-              <th scope="row">Audition Engagement Gate</th>
-              <td>Mandatory <span class="mono-spec">&ge; 2.0s</span> active listening on A, X, and B before choice unlocks</td>
-            </tr>
-            <tr>
-              <th scope="row">Statistical Inference</th>
-              <td>Exact binomial upper-tail <span class="mono-spec">p-value</span>, Clopper&ndash;Pearson <span class="mono-spec">95% CI</span>, Holm&ndash;Bonferroni correction</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="bench-spec-grid bench-spec-table">
+          <div class="spec-item">
+            <span class="spec-label">Methodological Format</span>
+            <span class="spec-val">Double-Blind 2-Alternative Forced Choice (2AFC)</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Null Hypothesis Rate (H₀)</span>
+            <span class="spec-val"><span class="mono-spec">50.0%</span> coin-flip baseline chance</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Reference Master</span>
+            <span class="spec-val"><span class="mono-spec">16-bit / 44.1 kHz</span> Redbook FLAC (Lossless)</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Comparison Target</span>
+            <span class="spec-val">Configurable: <span class="mono-spec">AAC 256k</span>, <span class="mono-spec">Opus 128k</span>, <span class="mono-spec">MP3 128k</span></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Blinding Security</span>
+            <span class="spec-val">Hardware CSPRNG (<span class="mono-spec">Web Crypto API</span>) encapsulated</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Audition Gate</span>
+            <span class="spec-val">Mandatory <span class="mono-spec">&ge; 2.0s</span> listening on A, X, and B</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Switching &amp; Crossfade</span>
+            <span class="spec-val"><span class="mono-spec">10ms</span> micro-crossfade with playhead sync</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Statistical Inference</span>
+            <span class="spec-val">Exact binomial <span class="mono-spec">p-value</span> &middot; Clopper&ndash;Pearson <span class="mono-spec">95% CI</span></span>
+          </div>
+        </div>
 
         <div class="bench-advisory">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <div>
-            <strong>Laboratory Protocol:</strong> Pre-registration of trials prevents statistical cherry-picking. A 30-second auditory rest timer is enforced between tracks to reduce listening fatigue.
-          </div>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>Laboratory Protocol:</strong> Pre-registration of trial count prevents statistical cherry-picking. 30-second auditory rest timer enforced between tracks to reduce cognitive fatigue.</span>
         </div>
       </div>
 

@@ -39,14 +39,14 @@
 
   [data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0B0F19;
-    --surface: #151D2F;
-    --ink: #F1F5F9;
+    --bg: #121214;
+    --surface: #1B1C1F;
+    --ink: #F0F1F3;
     --ink-hover: #FFFFFF;
-    --muted: #94A3B8;
-    --line: #26334D;
-    --line-strong: #3B4B6E;
-    --soft: #1C263B;
+    --muted: #8E9299;
+    --line: #2E3035;
+    --line-strong: #42454C;
+    --soft: #242529;
     --accent: #E55722;
     --accent-strong: #C44514;
     --accent-soft: rgba(229, 87, 34, 0.16);
@@ -59,29 +59,29 @@
     --bad: #EF4444;
     --bad-soft: rgba(239, 68, 68, 0.16);
     --bad-ink: #F87171;
-    --bar-bg: rgba(11, 15, 25, 0.94);
-    --dialog-backdrop: rgba(0, 0, 0, 0.75);
-    --wave-bg: #26334D;
-    --stat-box-bg: #1F1713;
-    --stat-box-border: #4D2617;
+    --bar-bg: rgba(18, 18, 20, 0.94);
+    --dialog-backdrop: rgba(0, 0, 0, 0.78);
+    --wave-bg: #2C2E33;
+    --stat-box-bg: #1D1714;
+    --stat-box-border: #3D261C;
     --stat-box-hdr: #FB923C;
-    --card-hover-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-    --btn-primary-bg: #F1F5F9;
+    --card-hover-shadow: none;
+    --btn-primary-bg: #E6E8EB;
     --btn-primary-hover: #FFFFFF;
-    --btn-primary-text: #0B0F19;
+    --btn-primary-text: #121214;
   }
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #0B0F19;
-      --surface: #151D2F;
-      --ink: #F1F5F9;
+      --bg: #121214;
+      --surface: #1B1C1F;
+      --ink: #F0F1F3;
       --ink-hover: #FFFFFF;
-      --muted: #94A3B8;
-      --line: #26334D;
-      --line-strong: #3B4B6E;
-      --soft: #1C263B;
+      --muted: #8E9299;
+      --line: #2E3035;
+      --line-strong: #42454C;
+      --soft: #242529;
       --accent: #E55722;
       --accent-strong: #C44514;
       --accent-soft: rgba(229, 87, 34, 0.16);
@@ -94,16 +94,16 @@
       --bad: #EF4444;
       --bad-soft: rgba(239, 68, 68, 0.16);
       --bad-ink: #F87171;
-      --bar-bg: rgba(11, 15, 25, 0.94);
-      --dialog-backdrop: rgba(0, 0, 0, 0.75);
-      --wave-bg: #26334D;
-      --stat-box-bg: #1F1713;
-      --stat-box-border: #4D2617;
+      --bar-bg: rgba(18, 18, 20, 0.94);
+      --dialog-backdrop: rgba(0, 0, 0, 0.78);
+      --wave-bg: #2C2E33;
+      --stat-box-bg: #1D1714;
+      --stat-box-border: #3D261C;
       --stat-box-hdr: #FB923C;
-      --card-hover-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-      --btn-primary-bg: #F1F5F9;
+      --card-hover-shadow: none;
+      --btn-primary-bg: #E6E8EB;
       --btn-primary-hover: #FFFFFF;
-      --btn-primary-text: #0B0F19;
+      --btn-primary-text: #121214;
     }
   }
 
@@ -117,7 +117,7 @@
     line-height: 1.5;
     font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
-    padding-bottom: 96px;
+    padding-bottom: 32px;
   }
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
   button:disabled { cursor: not-allowed; }
@@ -128,7 +128,7 @@
 
   /* Top bar */
   .bar { position: sticky; top: 0; z-index: 20; background: var(--bar-bg); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-  .bar-in { max-width: 960px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 16px; }
+  .bar-in { max-width: 1160px; margin: 0 auto; padding: 0 20px; height: 54px; display: flex; align-items: center; gap: 16px; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; font-size: 16px; }
   .brand svg { color: var(--accent); }
   .progress { flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0; justify-content: center; }
@@ -173,9 +173,9 @@
   .view[hidden] { display: none !important; }
 
   /* Page container */
-  .page { max-width: 960px; margin: 0 auto; padding: 36px 20px 0; }
-  h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.15; letter-spacing: -.028em; font-weight: 700; }
-  .lede { margin-top: 12px; font-size: 18px; color: var(--muted); max-width: 64ch; line-height: 1.5; }
+  .page { max-width: 1160px; margin: 0 auto; padding: 18px 24px 0; }
+  h1 { font-size: clamp(26px, 3.6vw, 36px); line-height: 1.15; letter-spacing: -.028em; font-weight: 700; }
+  .lede { margin-top: 8px; font-size: 16px; color: var(--muted); max-width: 68ch; line-height: 1.5; }
 
   /* Touch note */
   .touch-note { display: none; margin-top: 24px; gap: 12px; padding: 14px 16px; border-radius: var(--r-row); background: #FFF7ED; border: 1px solid #FFEDD5; color: #9A3412; font-size: 14px; line-height: 1.45; }
@@ -357,41 +357,42 @@
      ========================================================================== */
   .portal-hero {
     text-align: center;
-    margin-bottom: 28px;
+    margin-bottom: 12px;
   }
   .portal-hero h1 {
-    font-size: clamp(28px, 4vw, 40px);
+    font-size: clamp(22px, 2.4vw, 28px);
     letter-spacing: -0.025em;
     line-height: 1.15;
     font-weight: 700;
   }
   .portal-hero .lede {
-    margin: 10px auto 0;
-    max-width: 62ch;
+    margin: 3px auto 0;
+    max-width: 72ch;
     color: var(--muted);
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.4;
   }
 
   /* Segmented Methodology Switcher */
   .bench-switcher {
     display: flex;
-    max-width: 760px;
-    margin: 0 auto 24px;
+    max-width: 820px;
+    margin: 0 auto 12px;
     background: var(--soft);
-    padding: 5px;
-    border-radius: 12px;
+    padding: 3px;
+    border-radius: 9px;
     border: 1px solid var(--line);
-    gap: 6px;
+    gap: 4px;
   }
   .bench-tab {
     flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 12px 18px;
-    border-radius: 8px;
+    gap: 10px;
+    padding: 7px 16px;
+    border-radius: 6px;
     background: transparent;
     border: 1px solid transparent;
     color: var(--muted);
@@ -419,11 +420,12 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   }
   .bench-tab-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
   }
   .bench-tab.active .bench-tab-title {
     color: var(--ink);
@@ -431,12 +433,13 @@
   .bench-tab-sub {
     font-size: 12px;
     color: var(--muted);
-    margin-top: 3px;
+    margin: 0;
+    white-space: nowrap;
   }
 
   /* Console Panel */
   .bench-console {
-    max-width: 840px;
+    max-width: 1140px;
     margin: 0 auto;
     background: var(--surface);
     border: 1px solid var(--line);
@@ -452,12 +455,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
+    padding: 10px 18px;
     background: var(--soft);
     border-bottom: 1px solid var(--line);
   }
   .bench-header-title {
-    font-size: 12.5px;
+    font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -469,12 +472,12 @@
   .bench-status-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: 5px;
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--good);
     background: var(--good-soft);
-    padding: 3px 10px;
+    padding: 2px 9px;
     border-radius: 999px;
   }
   .bench-status-pill::before {
@@ -486,40 +489,47 @@
     background: var(--good);
   }
   .bench-body {
-    padding: 26px 28px;
+    padding: 14px 18px;
   }
 
   /* Signal Architecture Chain */
   .signal-chain {
     background: var(--soft);
     border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
+    border-radius: 7px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
   }
   .signal-chain-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--muted);
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
   .signal-flow {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: 8px;
     font-family: var(--font-mono);
-    font-size: 12.5px;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .signal-flow::-webkit-scrollbar {
+    display: none;
   }
   .signal-node {
-    padding: 6px 11px;
+    padding: 4px 9px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 5px;
     color: var(--ink);
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .signal-node.highlight {
     border-color: var(--accent);
@@ -531,42 +541,44 @@
     color: var(--muted);
     user-select: none;
     font-weight: 700;
+    flex-shrink: 0;
   }
 
-  /* Technical Specifications Table */
-  .bench-spec-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 22px;
-    font-size: 14px;
+  /* 2-Column Technical Specifications Grid */
+  .bench-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 18px;
+    margin-bottom: 12px;
   }
-  .bench-spec-table th,
-  .bench-spec-table td {
-    padding: 11px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--line);
-    vertical-align: middle;
+  .spec-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 12.5px;
+    gap: 10px;
   }
-  .bench-spec-table tr:last-child th,
-  .bench-spec-table tr:last-child td {
-    border-bottom: none;
-  }
-  .bench-spec-table th {
-    width: 32%;
+  .spec-label {
     font-weight: 600;
     color: var(--muted);
-    font-size: 13px;
+    white-space: nowrap;
+    font-size: 12px;
   }
-  .bench-spec-table td {
+  .spec-val {
     color: var(--ink);
-    font-family: var(--font);
-    line-height: 1.45;
-  }
-  .bench-spec-table td .mono-spec {
-    font-family: var(--font-mono);
+    text-align: right;
     font-size: 12.5px;
-    background: var(--soft);
-    padding: 2px 7px;
+  }
+  .spec-val .mono-spec,
+  .mono-spec {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--surface);
+    padding: 1px 6px;
     border-radius: 4px;
     border: 1px solid var(--line);
     color: var(--ink);
@@ -576,15 +588,16 @@
   /* Pre-Flight Advisory Box */
   .bench-advisory {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 14px 16px;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
     background: var(--soft);
     border: 1px solid var(--line);
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.45;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
     color: var(--muted);
+    margin-bottom: 0;
   }
   .bench-advisory strong {
     color: var(--ink);
@@ -592,7 +605,6 @@
   .bench-advisory svg {
     color: var(--accent);
     flex: none;
-    margin-top: 1px;
   }
 
   /* Bench Console Footer */
@@ -600,18 +612,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 28px;
+    padding: 10px 18px;
     background: var(--soft);
     border-top: 1px solid var(--line);
-    gap: 16px;
+    gap: 12px;
     flex-wrap: wrap;
   }
   .bench-meta {
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--muted);
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
   }
   .bench-meta-item strong {
     color: var(--ink);
@@ -620,15 +632,18 @@
   .bench-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
   .bench-actions .btn {
-    min-width: 220px;
+    min-width: 190px;
+    min-height: 38px;
+    padding: 0 16px;
+    font-size: 13.5px;
   }
-  @media (max-width: 640px) {
+  @media (max-width: 860px) {
     .bench-switcher { flex-direction: column; }
-    .bench-tab { padding: 10px 14px; }
-    .bench-spec-table th { width: 38%; }
+    .bench-tab { flex-direction: column; gap: 2px; }
+    .bench-spec-grid { grid-template-columns: 1fr; }
     .bench-footer { flex-direction: column; align-items: stretch; }
     .bench-actions .btn { width: 100%; min-width: 0; }
   }
