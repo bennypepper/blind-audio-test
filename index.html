@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Blind Audio Quality Test</title>
+<title>Blind Audio Quality Test &middot; Scientific ABX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="scientific-stats.js"></script>
+<script src="scientific-audio.js"></script>
 <style>
   :root {
     color-scheme: light;
@@ -54,7 +56,7 @@
 
   /* Top bar */
   .bar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-  .bar-in { max-width: 960px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 20px; }
+  .bar-in { max-width: 960px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 16px; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; font-size: 16px; }
   .brand svg { color: var(--accent); }
   .progress { flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0; justify-content: center; }
@@ -63,6 +65,22 @@
   .seg.done { background: var(--ink); }
   .seg.current { background: var(--accent); }
   .progress-text { font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .bar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+  /* Mode Badge */
+  .mode-badge {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+  }
+  .mode-badge.badge-standard { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .mode-badge.badge-sci { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(217, 72, 38, 0.3); }
 
   /* Buttons */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 0 18px; border-radius: var(--r-ctl); font-weight: 600; font-size: 15px; transition: background .15s, border-color .15s, color .15s; }
@@ -71,18 +89,27 @@
   .btn-primary:disabled { background: var(--line); color: #7C8696; }
   .btn-quiet { border: 1px solid var(--line-strong); background: var(--surface); }
   .btn-quiet:hover { background: var(--soft); }
-  .btn-sm { min-height: 40px; padding: 0 14px; font-size: 14px; }
+  .btn-sm { min-height: 38px; padding: 0 12px; font-size: 14px; }
+  .btn-lg { min-height: 48px; font-size: 16px; padding: 0 24px; border-radius: var(--r-row); }
+  .btn-accent { background: var(--accent) !important; color: #fff !important; }
+  .btn-accent:hover { background: var(--accent-strong) !important; }
 
-  /* Page */
-  .page { max-width: 960px; margin: 0 auto; padding: 44px 20px 0; }
-  h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.1; letter-spacing: -.028em; font-weight: 700; }
-  .lede { margin-top: 12px; font-size: 18px; color: var(--muted); max-width: 62ch; }
+  /* SPA View Containers */
+  .view { display: block; }
+  .view[hidden] { display: none !important; }
 
+  /* Page container */
+  .page { max-width: 960px; margin: 0 auto; padding: 36px 20px 0; }
+  h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.15; letter-spacing: -.028em; font-weight: 700; }
+  .lede { margin-top: 12px; font-size: 18px; color: var(--muted); max-width: 64ch; line-height: 1.5; }
+
+  /* Touch note */
   .touch-note { display: none; margin-top: 24px; gap: 12px; padding: 14px 16px; border-radius: var(--r-row); background: #FFF7ED; border: 1px solid #FFEDD5; color: #9A3412; font-size: 14px; line-height: 1.45; }
   .touch-note svg { flex: none; margin-top: 2px; }
   .touch-note.show { display: flex; }
   @media (pointer: coarse) { .touch-note { display: flex; } }
 
+  /* Tips */
   .tips { margin-top: 28px; border: 1px solid var(--line); border-radius: var(--r-panel); background: var(--surface); }
   .tips summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; font-weight: 600; font-size: 15px; }
   .tips summary::-webkit-details-marker { display: none; }
@@ -97,7 +124,7 @@
   .tip span { color: var(--muted); font-size: 14px; display: block; }
   .tips-foot { margin-top: 20px; display: flex; justify-content: flex-end; }
 
-  /* Question list */
+  /* Question list (Standard Mode) */
   .panel { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); overflow: hidden; }
   .q { border-top: 1px solid var(--line); scroll-margin-top: 76px; }
   .q:first-child { border-top: 0; }
@@ -199,7 +226,7 @@
   .outcome.no { background: var(--bad-soft); color: var(--bad-ink); }
   .outcome-row { margin-top: 14px; display: flex; justify-content: flex-end; }
 
-  /* Results */
+  /* Results (Standard Mode) */
   .results { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); padding: 36px 32px; }
   .results[hidden] { display: none; }
   h2 { font-size: clamp(22px, 3.2vw, 30px); line-height: 1.15; letter-spacing: -.022em; font-weight: 700; }
@@ -241,27 +268,476 @@
   footer.site { max-width: 960px; margin: 32px auto 0; padding: 0 20px; font-size: 13px; color: var(--muted); }
   footer.site p { max-width: 72ch; }
 
-  /* Dialog */
-  dialog { border: 0; border-radius: var(--r-panel); padding: 24px; width: calc(100% - 32px); max-width: 440px; margin: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
+  /* Dialogs */
+  dialog { border: 0; border-radius: var(--r-panel); padding: 24px; width: calc(100% - 32px); max-width: 520px; margin: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
   dialog::backdrop { background: rgba(27,36,51,.45); }
   dialog h2 { font-size: 20px; }
   dialog p { margin-top: 8px; color: var(--muted); font-size: 15px; }
   .dlg-actions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 10px; }
+  .dialog-scroll-body { max-height: 60vh; overflow-y: auto; margin-top: 14px; font-size: 14px; color: var(--ink); }
+  .dialog-scroll-body h4 { margin-top: 14px; margin-bottom: 6px; font-size: 15px; }
+  .dialog-scroll-body p { margin-top: 6px; color: var(--ink); font-size: 14px; line-height: 1.45; }
 
-  /* Responsive */
-  @media (max-width: 720px) {
+  /* ==========================================================================
+     MODE SELECTION PORTAL (#view-mode-select)
+     ========================================================================== */
+  .portal-hero { text-align: center; margin-bottom: 36px; }
+  .portal-hero h1 { font-size: clamp(30px, 4.5vw, 44px); }
+  .portal-hero .lede { margin: 12px auto 0; }
+
+  .mode-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-panel);
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .mode-card:hover {
+    box-shadow: 0 10px 30px rgba(27, 36, 51, 0.07);
+    transform: translateY(-2px);
+    border-color: var(--line-strong);
+  }
+  .mode-card.featured {
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(217, 72, 38, 0.12);
+  }
+  .mode-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+  }
+  .mode-tag.standard { background: var(--soft); color: var(--muted); }
+  .mode-tag.scientific { background: var(--accent-soft); color: var(--accent); }
+  .mode-card h2 { font-size: 24px; margin-bottom: 10px; }
+  .mode-desc { color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
+  .mode-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .mode-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink); }
+  .mode-features svg { color: var(--good); flex: none; margin-top: 3px; }
+  .mode-card-footer { margin-top: auto; }
+  .mode-card-footer .btn { width: 100%; }
+
+  /* ==========================================================================
+     SCIENTIFIC SETUP VIEW (#view-scientific-setup)
+     ========================================================================== */
+  .sci-setup-container { max-width: 840px; margin: 0 auto; }
+  .badge-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .sci-explainer {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-panel);
+    padding: 24px;
+    margin: 28px 0;
+  }
+  .sci-explainer h3 { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; }
+  .explainer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .explainer-item { display: flex; gap: 12px; }
+  .explainer-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 16px;
+    flex: none;
+  }
+  .explainer-badge.x { background: var(--accent); }
+  .explainer-item b { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .explainer-item p { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+  .form-section { margin-top: 28px; }
+  .form-section h3 { font-size: 18px; margin-bottom: 4px; font-weight: 700; }
+  .form-sub { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+  .codec-options, .track-options, .preset-options { display: grid; gap: 10px; }
+  .codec-options, .preset-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .track-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .option-card, .preset-card {
+    border: 1px solid var(--line);
+    border-radius: var(--r-row);
+    background: var(--surface);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    display: flex;
+    position: relative;
+  }
+  .option-card input, .preset-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .option-card:hover, .preset-card:hover { border-color: var(--line-strong); }
+  .option-card.active, .preset-card.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .opt-body, .preset-body { display: flex; flex-direction: column; gap: 4px; }
+  .opt-title, .preset-name { font-weight: 700; font-size: 15px; color: var(--ink); }
+  .opt-desc, .preset-detail { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+  .sci-stat-box {
+    background: #F0F4FA;
+    border: 1px solid #D1DCED;
+    border-radius: var(--r-panel);
+    padding: 22px;
+    margin-top: 28px;
+  }
+  .stat-box-header { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #1E3A8A; margin-bottom: 14px; }
+  .stat-box-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-pill {
+    background: #fff;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-val { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .stat-note { margin-top: 14px; font-size: 13px; color: #334155; line-height: 1.45; }
+
+  .sci-setup-actions { margin-top: 28px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+
+  /* ==========================================================================
+     SCIENTIFIC TRIAL VIEW (#view-scientific-trial)
+     ========================================================================== */
+  .sci-trial-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-panel);
+    padding: 32px;
+    max-width: 840px;
+    margin: 0 auto;
+  }
+  .trial-meta-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .meta-trial { color: var(--ink); font-size: 16px; font-weight: 700; }
+  .sci-progress-bar {
+    height: 6px;
+    background: var(--soft);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .sci-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+
+  .sci-track-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sci-cover {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    flex: none;
+    background: var(--soft);
+  }
+  .sci-track-info h2 { font-size: 22px; margin-bottom: 2px; }
+  .sci-artist { font-size: 15px; color: var(--muted); margin-bottom: 6px; }
+  .sci-hint { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .sci-hint b { color: var(--ink); margin-right: 4px; }
+
+  .sci-player-panel { margin-bottom: 24px; }
+  .sci-transport { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .transport-controls { display: flex; gap: 8px; }
+
+  .sci-section-panel {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--r-row);
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .panel-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .panel-header h3 { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+  .panel-sub { font-size: 13px; color: var(--muted); }
+  .gate-message { font-size: 13px; font-weight: 600; color: #B45309; }
+  .gate-message.unlocked { color: var(--good); }
+
+  .listen-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .source-btn {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: var(--r-row);
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .source-btn:hover { border-color: var(--line-strong); background: #FAFBFC; }
+  .source-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .source-btn .source-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--soft);
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .source-btn.active .source-badge { background: var(--accent); color: #fff; }
+  .source-btn .source-title { font-weight: 700; font-size: 15px; }
+  .source-btn .source-sub { font-size: 12px; color: var(--muted); text-align: center; }
+  .source-gate {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--soft);
+    padding: 3px 8px;
+    border-radius: 12px;
+  }
+  .source-gate.ok { background: var(--good-soft); color: var(--good-ink); font-weight: 600; }
+  .hotkey-hint {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--soft);
+    color: var(--muted);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  .choose-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .choose-btn {
+    min-height: 56px;
+    border: 2px solid var(--line-strong);
+    border-radius: var(--r-row);
+    background: var(--surface);
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .choose-btn:hover:not(:disabled) { border-color: var(--ink); }
+  .choose-btn.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .choose-btn:disabled { opacity: 0.45; cursor: not-allowed; background: var(--soft); border-color: var(--line); }
+
+  .sci-commit-panel { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+  .commit-hint { font-size: 14px; color: var(--muted); }
+  .hotkey-hint-commit {
+    font-size: 12px;
+    opacity: 0.85;
+    background: rgba(255,255,255,0.22);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+
+  /* ==========================================================================
+     SCIENTIFIC REST SCREEN (#view-scientific-rest)
+     ========================================================================== */
+  .rest-container { max-width: 600px; margin: 40px auto; text-align: center; }
+  .rest-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-panel);
+    padding: 40px 32px;
+  }
+  .rest-icon { color: var(--accent); margin-bottom: 16px; display: flex; justify-content: center; }
+  .rest-sub { margin-top: 6px; color: var(--muted); font-size: 16px; }
+  .rest-countdown-ring {
+    margin: 28px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 5px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .rest-seconds { font-size: 44px; font-weight: 800; line-height: 1; color: var(--accent); }
+  .rest-sec-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .rest-explanation {
+    background: var(--bg);
+    border-radius: var(--r-row);
+    padding: 16px;
+    margin: 24px 0;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: left;
+    line-height: 1.45;
+  }
+  .rest-explanation b { color: var(--ink); display: block; margin-bottom: 4px; }
+  .rest-actions { display: flex; justify-content: center; }
+
+  /* ==========================================================================
+     SCIENTIFIC RESULTS VIEW (#view-scientific-results)
+     ========================================================================== */
+  .sci-results-container { max-width: 880px; margin: 0 auto; }
+  .verdict-banner {
+    border-radius: var(--r-panel);
+    padding: 32px;
+    margin-bottom: 28px;
+    background: var(--surface);
+    border: 2px solid var(--line);
+  }
+  .verdict-banner.detected { border-color: var(--good); background: var(--good-soft); }
+  .verdict-banner.undetected { border-color: #CBD5E1; background: #F8FAFC; }
+  .verdict-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .verdict-banner.detected .verdict-tag { background: var(--good); color: #fff; }
+  .verdict-banner.undetected .verdict-tag { background: #64748B; color: #fff; }
+  .verdict-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+  .verdict-explanation { font-size: 16px; line-height: 1.5; color: var(--ink); }
+
+  .results-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .r-metric-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-row);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .r-metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .r-metric-val { font-size: 20px; font-weight: 800; color: var(--ink); }
+  .r-metric-sub { font-size: 13px; color: var(--muted); }
+
+  .results-section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-panel);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .section-title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .section-note { font-size: 13px; color: var(--muted); }
+  .table-wrap { overflow-x: auto; }
+  .sci-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+  .sci-table th, .sci-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .sci-table th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .sci-table tr:last-child td { border-bottom: 0; }
+  .sci-table .sub { color: var(--muted); font-size: 13px; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-badge.ok { background: var(--good-soft); color: var(--good-ink); }
+  .status-badge.neutral { background: var(--soft); color: var(--muted); }
+
+  .bias-box { padding: 16px 18px; border-radius: var(--r-row); background: var(--soft); font-size: 14px; line-height: 1.5; }
+  .results-action-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+  /* Hotkey dialog table */
+  .hotkey-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+  .hotkey-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  .hotkey-table kbd {
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+    padding: 2px 8px;
+    background: var(--soft);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: 700;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    .mode-cards { grid-template-columns: 1fr; }
+    .explainer-grid { grid-template-columns: 1fr; }
+    .codec-options, .preset-options { grid-template-columns: 1fr; }
+    .track-options { grid-template-columns: 1fr; }
+    .stat-box-grid { grid-template-columns: repeat(2, 1fr); }
+    .results-stats-grid { grid-template-columns: repeat(2, 1fr); }
     .r-grid { grid-template-columns: 1fr; }
     .tips-grid { grid-template-columns: 1fr; }
     .results { padding: 24px 18px; }
+    .sci-trial-card { padding: 20px 16px; }
   }
   @media (max-width: 640px) {
-    .bar-in { gap: 12px; padding: 0 16px; }
+    .bar-in { gap: 10px; padding: 0 16px; }
     .brand span { display: none; }
     .progress-text .full { display: none; }
     .btn .lbl { display: none; }
-    #reshuffle { padding: 0; width: 44px; }
-    .page { padding: 28px 16px 0; }
+    #reshuffle { padding: 0; width: 40px; }
+    .page { padding: 24px 16px 0; }
     .lede { font-size: 16px; }
+    .listen-buttons { grid-template-columns: 1fr; }
     .q-head { grid-template-columns: 48px minmax(0, 1fr) 20px; grid-template-areas: "thumb main chev" "status status status"; }
     .q-num { display: none; }
     .thumb { grid-area: thumb; }
@@ -278,6 +754,7 @@
     .s-codec b { display: block; margin-right: 0; }
     .scale { gap: 4px; }
     .cell { height: 40px; }
+    .sci-track-profile { flex-direction: column; text-align: center; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -289,22 +766,79 @@
 
 <header class="bar">
   <div class="bar-in">
-    <div class="brand">
+    <div class="brand" id="brand-home" role="button" tabindex="0" title="Return to Mode Portal">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="10" width="3" height="4" rx="1"/><rect x="8" y="6" width="3" height="12" rx="1"/><rect x="13" y="3" width="3" height="18" rx="1"/><rect x="18" y="8" width="3" height="8" rx="1"/></svg>
       <span>Blind Audio Test</span>
     </div>
-    <div class="progress" id="progress" role="progressbar" aria-label="Questions answered" aria-valuenow="0" aria-valuemin="0" aria-valuemax="8">
+    <span class="mode-badge badge-standard" id="mode-badge" style="display: none;">Standard</span>
+    <div class="progress" id="progress" role="progressbar" aria-label="Test progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="8" style="display: none;">
       <div class="segs" id="segs"></div>
       <span class="progress-text" id="progress-text"></span>
     </div>
-    <button class="btn btn-quiet btn-sm" id="reshuffle" aria-label="Reshuffle songs">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-      <span class="lbl">Reshuffle</span>
-    </button>
+    <div class="bar-actions">
+      <button class="btn btn-quiet btn-sm" id="reshuffle" aria-label="Reshuffle songs" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span class="lbl">Reshuffle</span>
+      </button>
+      <button class="btn btn-quiet btn-sm" id="btn-switch-mode" aria-label="Switch Test Mode" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        <span class="lbl">Switch Mode</span>
+      </button>
+    </div>
   </div>
 </header>
 
-<main class="page">
+<!-- ==========================================================================
+     1. MODE SELECTION VIEW (#view-mode-select)
+     ========================================================================== -->
+<div id="view-mode-select" class="page view">
+  <div class="portal-hero">
+    <h1>Two ways to test your critical hearing.</h1>
+    <p class="lede">Evaluate your acoustic acuity and playback equipment. Choose between our casual streaming tier challenge or the rigorous, double-blind scientific ABX testing protocol.</p>
+  </div>
+  <div class="mode-cards">
+    <!-- Card 1: Standard Mode -->
+    <div class="mode-card">
+      <div>
+        <span class="mode-tag standard">Casual / Streaming Challenge</span>
+        <h2>Standard Mode</h2>
+        <p class="mode-desc">A 4-choice blind evaluation across 8 acoustic stress-test genres. Compare CD lossless master against simulated streaming tiers (Apple AAC 256k, YouTube Opus 128k, Standard MP3 128k) with instant feedback after every song.</p>
+        <ul class="mode-features">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 8 curated acoustic categories (vocals, piano, drums, EDM, etc.)</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 4-choice MUSHRA format (25% chance guessing baseline)</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Immediate reveal &amp; feedback after each song</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Fast 5&ndash;10 minute listening session</li>
+        </ul>
+      </div>
+      <div class="mode-card-footer">
+        <button class="btn btn-primary btn-lg" id="btn-launch-standard">Launch Standard Mode</button>
+      </div>
+    </div>
+
+    <!-- Card 2: Scientific ABX -->
+    <div class="mode-card featured">
+      <div>
+        <span class="mode-tag scientific">Rigorous / Double-Blind</span>
+        <h2>Scientific ABX</h2>
+        <p class="mode-desc">Strict double-blind perceptual ABX methodology inspired by <code>abx.digitalfeed.net</code>. Pre-registered trials, gapless Web Audio switching, exact binomial statistics, Clopper&ndash;Pearson 95% confidence intervals, and Holm&ndash;Bonferroni corrections.</p>
+        <ul class="mode-features">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> CD 16/44.1 FLAC vs chosen codec (AAC 256, Opus 128, MP3 128)</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hardware CSPRNG double-blind secret target randomization</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 2.0s per-source audition gate &amp; gapless 10ms micro-crossfade</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Exact p-values, Clopper&ndash;Pearson 95% CI &amp; JSON audit log</li>
+        </ul>
+      </div>
+      <div class="mode-card-footer">
+        <button class="btn btn-primary btn-lg btn-accent" id="btn-launch-scientific">Launch Scientific ABX</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     2. STANDARD MODE VIEW (#view-standard)
+     ========================================================================== -->
+<main id="view-standard" class="page view" hidden>
   <h1>Can you hear the difference?</h1>
   <p class="lede">Each song comes in four versions: one lossless, three compressed the way popular streaming services do it. Switch between them while the song plays and pick the one with the highest quality.</p>
 
@@ -347,18 +881,454 @@
   <section class="results" id="results" hidden aria-labelledby="r-title"></section>
 </main>
 
+<!-- ==========================================================================
+     3. SCIENTIFIC SETUP VIEW (#view-scientific-setup)
+     ========================================================================== -->
+<div id="view-scientific-setup" class="page view" hidden>
+  <div class="sci-setup-container">
+    <span class="badge-tag">Scientific Methodology</span>
+    <h1>Double-Blind ABX Perceptual Testing</h1>
+    <p class="lede">Strict double-blind statistical protocol designed to determine whether you can reliably hear the difference between lossless audio and compressed formats.</p>
+
+    <!-- HOW DOES IT WORK? -->
+    <div class="sci-explainer">
+      <h3>HOW DOES IT WORK?</h3>
+      <div class="explainer-grid">
+        <div class="explainer-item">
+          <div class="explainer-badge">A</div>
+          <div>
+            <b>Source A (Lossless Master)</b>
+            <p>CD-quality uncompressed 16-bit / 44.1 kHz FLAC reference audio.</p>
+          </div>
+        </div>
+        <div class="explainer-item">
+          <div class="explainer-badge">B</div>
+          <div>
+            <b>Source B (Lossy Target)</b>
+            <p>Selected lossy encoded stream (AAC 256k, Opus 128k, or MP3 128k).</p>
+          </div>
+        </div>
+        <div class="explainer-item">
+          <div class="explainer-badge x">X</div>
+          <div>
+            <b>Source X (Secret Target)</b>
+            <p>Assigned to A or B via cryptographic CSPRNG. Decide: Is X equal to A, or X equal to B?</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Setup Form -->
+    <div class="sci-form">
+      <!-- 1. Codec Comparison -->
+      <div class="form-section">
+        <h3>1. Select Codec Comparison</h3>
+        <p class="form-sub">Compare CD 16/44.1 FLAC master against:</p>
+        <div class="codec-options" role="radiogroup" aria-label="Codec Comparison">
+          <label class="option-card active" data-codec="aac256">
+            <input type="radio" name="sci-codec" value="aac256" checked>
+            <div class="opt-body">
+              <span class="opt-title">Apple AAC 256 kbps</span>
+              <span class="opt-desc">Apple Music standard. High perceptual transparency across broad frequency bands.</span>
+            </div>
+          </label>
+          <label class="option-card" data-codec="opus128">
+            <input type="radio" name="sci-codec" value="opus128">
+            <div class="opt-body">
+              <span class="opt-title">YouTube Music Opus 128 kbps</span>
+              <span class="opt-desc">Modern open codec. Industry benchmark for efficient mid-bitrate streaming.</span>
+            </div>
+          </label>
+          <label class="option-card" data-codec="mp3128">
+            <input type="radio" name="sci-codec" value="mp3128">
+            <div class="opt-body">
+              <span class="opt-title">Standard MP3 128 kbps</span>
+              <span class="opt-desc">Classic legacy lossy encoding. Audible high-frequency cutoff and stereo collapse.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 2. Track Battery Selection -->
+      <div class="form-section">
+        <h3>2. Select Track Battery</h3>
+        <p class="form-sub">Number of acoustic genre categories to evaluate:</p>
+        <div class="track-options" role="radiogroup" aria-label="Track Battery">
+          <label class="option-card active" data-tracks="5">
+            <input type="radio" name="sci-tracks" value="5" checked>
+            <div class="opt-body">
+              <span class="opt-title">5 Tracks (Quick Battery)</span>
+              <span class="opt-desc">5 randomly sampled acoustic genres. Ideal for a targeted listening session.</span>
+            </div>
+          </label>
+          <label class="option-card" data-tracks="8">
+            <input type="radio" name="sci-tracks" value="8">
+            <div class="opt-body">
+              <span class="opt-title">8 Tracks (Full Acoustic Battery)</span>
+              <span class="opt-desc">All 8 acoustic stress categories (vocals, piano, drums, EDM, funk, pop, orchestra, J-pop).</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 3. Trial Presets -->
+      <div class="form-section">
+        <h3>3. Select Trial Length (Trials per Track)</h3>
+        <p class="form-sub">Inspired by digitalfeed presets. More trials yield greater statistical power and tighter confidence intervals:</p>
+        <div class="preset-options" role="radiogroup" aria-label="Trial Count Presets">
+          <label class="preset-card" data-preset="5">
+            <input type="radio" name="sci-preset" value="5">
+            <div class="preset-body">
+              <span class="preset-name">"I'm busy, do 5 trials"</span>
+              <span class="preset-detail"><span id="preset-busy-n">25</span> total trials &middot; ~5&ndash;10 mins</span>
+            </div>
+          </label>
+          <label class="preset-card active" data-preset="10">
+            <input type="radio" name="sci-preset" value="10" checked>
+            <div class="preset-body">
+              <span class="preset-name">"I'm curious, do 10 trials"</span>
+              <span class="preset-detail"><span id="preset-curious-n">50</span> total trials &middot; ~10&ndash;15 mins</span>
+            </div>
+          </label>
+          <label class="preset-card" data-preset="20">
+            <input type="radio" name="sci-preset" value="20">
+            <div class="preset-body">
+              <span class="preset-name">"I'm serious, do 20 trials"</span>
+              <span class="preset-detail"><span id="preset-serious-n">100</span> total trials &middot; ~20&ndash;35 mins</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 4. Pre-Registration Statistical Summary Box -->
+      <div class="sci-stat-box" id="sci-stat-box">
+        <div class="stat-box-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <b>Pre-Registration Statistical Summary</b>
+        </div>
+        <div class="stat-box-grid">
+          <div class="stat-pill">
+            <span class="stat-label">Total Trials (N)</span>
+            <span class="stat-val" id="stat-n">50</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Critical Threshold (S_crit)</span>
+            <span class="stat-val" id="stat-scrit">32 correct (64%)</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Test Size (&alpha;)</span>
+            <span class="stat-val" id="stat-alpha">p = 0.0325 (&le; 0.05)</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Min Detectable Effect (80%)</span>
+            <span class="stat-val" id="stat-mde">72.8%</span>
+          </div>
+        </div>
+        <p class="stat-note" id="stat-note">To establish a statistically significant audible difference (p &le; 0.05), you must achieve at least 32 correct answers out of 50 trials.</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="sci-setup-actions">
+        <button class="btn btn-quiet" id="btn-show-hotkeys">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+          Instructions &amp; Hotkeys
+        </button>
+        <button class="btn btn-primary btn-lg btn-accent" id="btn-begin-scientific">Begin Test</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     4. SCIENTIFIC TRIAL VIEW (#view-scientific-trial)
+     ========================================================================== -->
+<div id="view-scientific-trial" class="page view" hidden>
+  <div class="sci-trial-card">
+    <!-- Meta Counters -->
+    <div class="trial-meta-bar">
+      <div class="meta-track" id="trial-meta-track">Track 1 of 5</div>
+      <div class="meta-trial" id="trial-meta-trial">Trial 1 of 10</div>
+      <div class="meta-total" id="trial-meta-total">Total: Trial 1 of 50</div>
+    </div>
+    <div class="sci-progress-bar">
+      <div class="sci-progress-fill" id="trial-progress-fill" style="width: 2%;"></div>
+    </div>
+
+    <!-- Track Profile -->
+    <div class="sci-track-profile">
+      <img id="sci-cover" class="sci-cover" src="covers/song1.jpg" alt="Track cover art">
+      <div class="sci-track-info">
+        <h2 id="sci-title">All I Ask</h2>
+        <div class="sci-artist"><span id="sci-artist">Adele</span> &middot; <span id="sci-cat">Intimate Solo Vocal</span></div>
+        <p class="sci-hint" id="sci-hint"><b>Listen for:</b> Vocal sibilance, breath micro-details, and room reverb decay on piano.</p>
+      </div>
+    </div>
+
+    <!-- Player & Waveform -->
+    <div class="sci-player-panel">
+      <div class="wave" id="sci-wave" role="slider" tabindex="0" aria-label="Seek position in track" style="--p: 0%">
+        <div class="wave-layer" id="sci-wave-bg" aria-hidden="true"></div>
+        <div class="wave-layer played" id="sci-wave-fill" aria-hidden="true"></div>
+        <div class="playhead" id="sci-playhead"></div>
+      </div>
+      <div class="sci-transport">
+        <div class="time" id="sci-time"><b>0:00</b> / 0:30</div>
+        <div class="transport-controls">
+          <button class="btn btn-quiet btn-sm" id="btn-sci-rewind" title="Rewind to start (Home)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>
+          </button>
+          <button class="btn btn-quiet btn-sm" id="btn-sci-seek-back" title="Seek back 5s (&larr;)">
+            -5s
+          </button>
+          <button class="btn btn-quiet btn-sm" id="btn-sci-seek-fwd" title="Seek forward 5s (&rarr;)">
+            +5s
+          </button>
+          <button class="btn btn-quiet btn-sm" id="btn-sci-stop" title="Stop playback (Space)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+            <span class="lbl">Stop</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. LISTEN PANEL -->
+    <div class="sci-section-panel">
+      <div class="panel-header">
+        <h3>1. LISTEN</h3>
+        <span class="panel-sub">Audition each source for at least 2.0s</span>
+      </div>
+      <div class="listen-buttons">
+        <!-- Source A -->
+        <button class="source-btn" id="btn-source-a" data-source="A" aria-label="Listen to Source A (FLAC Master)">
+          <div class="source-badge">A</div>
+          <span class="source-title">Source A</span>
+          <span class="source-sub">Lossless FLAC Master</span>
+          <div class="source-gate" id="gate-a">
+            <span class="gate-time">0.0s</span>
+            <span class="gate-status">Need 2.0s</span>
+          </div>
+          <span class="hotkey-hint">A</span>
+        </button>
+
+        <!-- Source X -->
+        <button class="source-btn" id="btn-source-x" data-source="X" aria-label="Listen to Source X (Secret Target)">
+          <div class="source-badge">X</div>
+          <span class="source-title">Source X</span>
+          <span class="source-sub">Secret Target</span>
+          <div class="source-gate" id="gate-x">
+            <span class="gate-time">0.0s</span>
+            <span class="gate-status">Need 2.0s</span>
+          </div>
+          <span class="hotkey-hint">X</span>
+        </button>
+
+        <!-- Source B -->
+        <button class="source-btn" id="btn-source-b" data-source="B" aria-label="Listen to Source B (Lossy Target)">
+          <div class="source-badge">B</div>
+          <span class="source-title">Source B</span>
+          <span class="source-sub" id="source-b-sub">Lossy Format</span>
+          <div class="source-gate" id="gate-b">
+            <span class="gate-time">0.0s</span>
+            <span class="gate-status">Need 2.0s</span>
+          </div>
+          <span class="hotkey-hint">B</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. CHOOSE PANEL -->
+    <div class="sci-section-panel">
+      <div class="panel-header">
+        <h3>2. CHOOSE</h3>
+        <span class="gate-message" id="gate-message">🔒 Audition A, X, and B for at least 2.0s each to unlock choices</span>
+      </div>
+      <div class="choose-buttons">
+        <button class="choose-btn" id="btn-choose-a" disabled aria-label="Choose X is A">
+          <span class="choose-text">X is A</span>
+          <span class="hotkey-hint">1</span>
+        </button>
+        <button class="choose-btn" id="btn-choose-b" disabled aria-label="Choose X is B">
+          <span class="choose-text">X is B</span>
+          <span class="hotkey-hint">2</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. COMMIT PANEL -->
+    <div class="sci-commit-panel">
+      <div class="commit-hint" id="commit-hint">Make a choice above to enable commit</div>
+      <button class="btn btn-primary btn-lg btn-accent" id="btn-commit-next" disabled>
+        <span>Next</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="hotkey-hint-commit">Enter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     5. SCIENTIFIC REST VIEW (#view-scientific-rest)
+     ========================================================================== -->
+<div id="view-scientific-rest" class="page view" hidden>
+  <div class="rest-container">
+    <div class="rest-card">
+      <div class="rest-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h2>Auditory Rest &amp; Recovery</h2>
+      <p class="rest-sub" id="rest-completed-track">Track 1 of 5 Completed</p>
+      
+      <div class="rest-countdown-ring">
+        <span class="rest-seconds" id="rest-seconds">30</span>
+        <span class="rest-sec-label">seconds</span>
+      </div>
+
+      <div class="rest-explanation">
+        <b>Why rest your ears?</b>
+        <p>Continuous critical listening causes high-frequency adaptation and temporary ear fatigue. Taking 30 seconds of quiet allows your ear's hair cells and brain to reset their transient sensitivity for the next track.</p>
+      </div>
+
+      <div class="rest-actions">
+        <button class="btn btn-primary btn-lg" id="btn-rest-continue">Continue to Next Track</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     6. SCIENTIFIC RESULTS VIEW (#view-scientific-results)
+     ========================================================================== -->
+<div id="view-scientific-results" class="page view" hidden>
+  <div class="sci-results-container">
+    <!-- Primary Verdict Banner -->
+    <div class="verdict-banner detected" id="sci-verdict-banner">
+      <div class="verdict-tag" id="sci-verdict-tag">Scientific ABX Result</div>
+      <h1 class="verdict-title" id="sci-verdict-title">Audible Difference Detected</h1>
+      <p class="verdict-explanation" id="sci-verdict-exp"></p>
+    </div>
+
+    <!-- Key Metrics Grid -->
+    <div class="results-stats-grid">
+      <div class="r-metric-card">
+        <span class="r-metric-label">Overall Score</span>
+        <span class="r-metric-val" id="res-score">32 / 50</span>
+        <span class="r-metric-sub" id="res-score-pct">64.0% correct</span>
+      </div>
+      <div class="r-metric-card">
+        <span class="r-metric-label">Exact Binomial p-value</span>
+        <span class="r-metric-val" id="res-p">p = 0.0325</span>
+        <span class="r-metric-sub" id="res-p-sub">Threshold: &alpha; &le; 0.05</span>
+      </div>
+      <div class="r-metric-card">
+        <span class="r-metric-label">95% Clopper-Pearson CI</span>
+        <span class="r-metric-val" id="res-ci">[49.2%, 77.1%]</span>
+        <span class="r-metric-sub">Exact confidence bounds</span>
+      </div>
+      <div class="r-metric-card">
+        <span class="r-metric-label">Response Bias</span>
+        <span class="r-metric-val" id="res-bias">Unbiased</span>
+        <span class="r-metric-sub" id="res-bias-sub">26 A vs 24 B (p = 0.887)</span>
+      </div>
+    </div>
+
+    <!-- Per-Track Battery Breakdown -->
+    <div class="results-section">
+      <div class="section-title-row">
+        <h3>Per-Track Battery Breakdown</h3>
+        <span class="section-note">Holm-Bonferroni multi-testing correction applied</span>
+      </div>
+      <div class="table-wrap">
+        <table class="sci-table" id="sci-track-table">
+          <thead>
+            <tr>
+              <th>Track</th>
+              <th>Artist &amp; Category</th>
+              <th>Score</th>
+              <th>Raw p</th>
+              <th>Holm-Adj p</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="sci-track-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Response Bias Diagnostic Panel -->
+    <div class="results-section">
+      <h3>Response Bias Diagnostic</h3>
+      <div class="bias-box" id="sci-bias-box">
+        <p id="sci-bias-text"></p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="results-action-row">
+      <button class="btn btn-primary btn-lg" id="btn-download-audit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Audit Log (JSON)
+      </button>
+      <button class="btn btn-quiet btn-lg" id="btn-copy-markdown">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Markdown Report
+      </button>
+      <button class="btn btn-quiet btn-lg" id="btn-retake-scientific">Retake Test</button>
+      <button class="btn btn-quiet btn-lg" id="btn-change-setup">Change Setup</button>
+    </div>
+  </div>
+</div>
+
 <footer class="site">
   <p>Samples are encoded directly from identical lossless FLAC masters at bitrates comparable to popular streaming platforms. Not captured from live streaming feeds.</p>
 </footer>
 
 <div class="sr-only" id="live" aria-live="polite"></div>
 
+<!-- Dialog: Standard Reshuffle -->
 <dialog id="dlg" aria-labelledby="dlg-title">
   <h2 id="dlg-title">Reshuffle songs?</h2>
   <p id="dlg-text"></p>
   <div class="dlg-actions">
     <button class="btn btn-quiet" id="dlg-cancel">Keep my answers</button>
     <button class="btn btn-primary" id="dlg-ok">Reshuffle</button>
+  </div>
+</dialog>
+
+<!-- Dialog: Switch Mode Confirmation -->
+<dialog id="dlg-switch-mode" aria-labelledby="dlg-switch-title">
+  <h2 id="dlg-switch-title">Switch testing mode?</h2>
+  <p id="dlg-switch-text">You have a test currently in progress. Switching mode will abandon your current answers.</p>
+  <div class="dlg-actions">
+    <button class="btn btn-quiet" id="dlg-switch-cancel">Stay on Test</button>
+    <button class="btn btn-primary" id="dlg-switch-ok">Switch Mode</button>
+  </div>
+</dialog>
+
+<!-- Dialog: Instructions & Hotkeys -->
+<dialog id="dlg-instructions" aria-labelledby="dlg-inst-title">
+  <h2 id="dlg-inst-title">ABX Instructions &amp; Keyboard Shortcuts</h2>
+  <div class="dialog-scroll-body">
+    <h4>How the ABX Protocol Works</h4>
+    <p>1. In each trial, <b>A</b> is the lossless CD master, <b>B</b> is the lossy comparison format, and <b>X</b> is the secret target (randomly assigned to either A or B with 50/50 probability by cryptographic CSPRNG).</p>
+    <p>2. Switch between A, X, and B seamlessly while listening. Playback synchronizes sample-accurately with a 10ms micro-crossfade to eliminate telltale switching clicks.</p>
+    <p>3. <b>Audition Engagement Gate:</b> To prevent hasty guessing, you must listen to each source (A, X, and B) for at least 2.0 seconds before the choice buttons unlock.</p>
+    <p>4. Once unlocked, decide whether <b>X is A</b> or <b>X is B</b>, then click <b>Next</b> (or press Enter) to advance.</p>
+    <p>5. Trials are strictly double-blind: no immediate feedback is given during testing. Exact binomial p-values, 95% Clopper&ndash;Pearson confidence intervals, and Holm&ndash;Bonferroni corrections are displayed upon completion.</p>
+
+    <h4 style="margin-top: 18px;">Keyboard Shortcuts</h4>
+    <table class="hotkey-table">
+      <tr><td><kbd>A</kbd></td><td>Play Source A (Lossless Master)</td></tr>
+      <tr><td><kbd>X</kbd></td><td>Play Source X (Secret Target)</td></tr>
+      <tr><td><kbd>B</kbd></td><td>Play Source B (Lossy Target)</td></tr>
+      <tr><td><kbd>1</kbd></td><td>Choose "X is A" (once unlocked)</td></tr>
+      <tr><td><kbd>2</kbd></td><td>Choose "X is B" (once unlocked)</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>Commit choice &amp; advance to next trial</td></tr>
+      <tr><td><kbd>Space</kbd></td><td>Toggle Play / Stop</td></tr>
+      <tr><td><kbd>&larr;</kbd> / <kbd>&rarr;</kbd></td><td>Seek -5s / +5s</td></tr>
+    </table>
+  </div>
+  <div class="dlg-actions">
+    <button class="btn btn-primary" id="dlg-inst-close">Got it</button>
   </div>
 </dialog>
 
@@ -685,7 +1655,157 @@
     return out;
   }
 
-  /* Audio state and elements cache */
+  /* ==========================================================================
+     SPA VIEW ARCHITECTURE & NAVIGATION
+     ========================================================================== */
+  const VIEWS = {
+    MODE_SELECT: 'view-mode-select',
+    STANDARD:    'view-standard',
+    SCI_SETUP:   'view-scientific-setup',
+    SCI_TRIAL:   'view-scientific-trial',
+    SCI_REST:    'view-scientific-rest',
+    SCI_RESULTS: 'view-scientific-results'
+  };
+
+  let currentView = VIEWS.MODE_SELECT;
+
+  function switchView(targetView) {
+    // Stop standard mode audio if leaving standard
+    if (currentView === VIEWS.STANDARD && targetView !== VIEWS.STANDARD) {
+      pauseAllAudio();
+      if (S) S.playing = false;
+    }
+    // Stop scientific audio if leaving trial
+    if (currentView === VIEWS.SCI_TRIAL && targetView !== VIEWS.SCI_TRIAL) {
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        ScientificAudioEngine.stop();
+      }
+    }
+
+    Object.values(VIEWS).forEach(vId => {
+      const el = document.getElementById(vId);
+      if (el) {
+        el.hidden = (vId !== targetView);
+      }
+    });
+
+    currentView = targetView;
+    updateTopBar();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function updateTopBar() {
+    const badge = $('#mode-badge');
+    const prog = $('#progress');
+    const reshuffleBtn = $('#reshuffle');
+    const switchBtn = $('#btn-switch-mode');
+
+    if (currentView === VIEWS.MODE_SELECT) {
+      if (badge) badge.style.display = 'none';
+      if (prog) prog.style.display = 'none';
+      if (reshuffleBtn) reshuffleBtn.style.display = 'none';
+      if (switchBtn) switchBtn.style.display = 'none';
+    } else if (currentView === VIEWS.STANDARD) {
+      if (badge) {
+        badge.style.display = 'inline-flex';
+        badge.textContent = 'Standard Mode';
+        badge.className = 'mode-badge badge-standard';
+      }
+      if (prog) prog.style.display = 'flex';
+      if (reshuffleBtn) reshuffleBtn.style.display = 'inline-flex';
+      if (switchBtn) switchBtn.style.display = 'inline-flex';
+      renderBar();
+    } else {
+      // Scientific Views
+      if (badge) {
+        badge.style.display = 'inline-flex';
+        badge.textContent = 'Scientific ABX';
+        badge.className = 'mode-badge badge-sci';
+      }
+      if (reshuffleBtn) reshuffleBtn.style.display = 'none';
+      if (switchBtn) switchBtn.style.display = 'inline-flex';
+
+      if (currentView === VIEWS.SCI_SETUP) {
+        if (prog) prog.style.display = 'none';
+      } else if (currentView === VIEWS.SCI_TRIAL || currentView === VIEWS.SCI_REST) {
+        if (prog) {
+          prog.style.display = 'flex';
+          const trackK = sciTestState ? sciTestState.currentTrackIndex + 1 : 1;
+          const trackTotal = sciTestState ? sciTestState.trackCount : 5;
+          const trialT = sciTestState ? sciTestState.currentTrialIndex + 1 : 1;
+          const trialPerTrack = sciTestState ? sciTestState.trialsPerTrack : 10;
+          
+          const segsEl = $('#segs');
+          if (segsEl) {
+            segsEl.innerHTML = Array.from({ length: trackTotal }, (_, i) => {
+              let cls = '';
+              if (sciTestState && i < sciTestState.currentTrackIndex) cls = 'done';
+              else if (sciTestState && i === sciTestState.currentTrackIndex) cls = 'current';
+              return `<div class="seg ${cls}"></div>`;
+            }).join('');
+          }
+          const progText = $('#progress-text');
+          if (progText) {
+            progText.textContent = `Track ${trackK}/${trackTotal} • Trial ${trialT}/${trialPerTrack}`;
+          }
+        }
+      } else if (currentView === VIEWS.SCI_RESULTS) {
+        if (prog) {
+          prog.style.display = 'flex';
+          const segsEl = $('#segs');
+          if (segsEl) {
+            const trackTotal = sciTestState ? sciTestState.trackCount : 5;
+            segsEl.innerHTML = Array.from({ length: trackTotal }, () => `<div class="seg done"></div>`).join('');
+          }
+          const progText = $('#progress-text');
+          if (progText) {
+            progText.textContent = 'Battery Complete';
+          }
+        }
+      }
+    }
+  }
+
+  function handleModeSwitchRequest() {
+    const isStandardActive = currentView === VIEWS.STANDARD && S && S.qs.some(q => q.locked) && !S.qs.every(q => q.locked);
+    const isSciActive = (currentView === VIEWS.SCI_TRIAL || currentView === VIEWS.SCI_REST) && sciTestState && sciTestState.trials.length > 0;
+
+    if (isStandardActive || isSciActive) {
+      const dlgSwitch = $('#dlg-switch-mode');
+      if (dlgSwitch) dlgSwitch.showModal();
+    } else {
+      switchView(VIEWS.MODE_SELECT);
+    }
+  }
+
+  $('#btn-switch-mode').addEventListener('click', handleModeSwitchRequest);
+  $('#brand-home').addEventListener('click', handleModeSwitchRequest);
+  $('#brand-home').addEventListener('keydown', e => { if (e.key === 'Enter') handleModeSwitchRequest(); });
+
+  $('#dlg-switch-cancel').addEventListener('click', () => $('#dlg-switch-mode').close());
+  $('#dlg-switch-ok').addEventListener('click', () => {
+    $('#dlg-switch-mode').close();
+    pauseAllAudio();
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.stop();
+    }
+    switchView(VIEWS.MODE_SELECT);
+  });
+
+  $('#btn-launch-standard').addEventListener('click', () => {
+    switchView(VIEWS.STANDARD);
+    if (!S) S = makeState(false);
+    render();
+  });
+
+  $('#btn-launch-scientific').addEventListener('click', () => {
+    switchView(VIEWS.SCI_SETUP);
+    updatePreRegStats();
+  });
+
+  /* ==========================================================================
+     STANDARD MODE AUDIO ENGINE & STATE
+     ========================================================================== */
   const audioMap = new Map(); // key: `${qIdx}-${sIdx}` -> HTMLAudioElement
 
   function getAudioEl(qIdx, sIdx, src) {
@@ -738,7 +1858,6 @@
     });
   }
 
-  /* State */
   let S;
   let selectedContenderIdx = [0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -747,8 +1866,7 @@
     audioMap.clear();
 
     if (reshuffleContenders) {
-      // Pick random 0 or 1 for each category
-      selectedContenderIdx = selectedContenderIdx.map(current => Math.random() > 0.5 ? 1 : 0);
+      selectedContenderIdx = selectedContenderIdx.map(() => Math.random() > 0.5 ? 1 : 0);
     }
 
     const activeSongs = SONG_CATEGORIES.map((cat, idx) => {
@@ -774,7 +1892,6 @@
     return { qs, open: 0, playing: false, sync: true };
   }
 
-  /* Rendering Components */
   function sampleHTML(q, s) {
     const key = q.order[s], c = CODECS[key], st = q.load[s];
     const active = q.cur === s, playingNow = active && S.playing, reveal = q.locked;
@@ -879,6 +1996,7 @@
   }
 
   function renderBar() {
+    if (!S) return;
     const lockedCount = S.qs.filter(q => q.locked).length;
     $('#segs').innerHTML = S.qs.map((q, i) => {
       const c = q.locked ? 'done' : (i === S.open ? 'current' : '');
@@ -890,6 +2008,7 @@
   }
 
   function renderResults() {
+    if (!S) return;
     const allDone = S.qs.every(x => x.locked);
     const r = $('#results');
     if (!allDone) { r.hidden = true; r.innerHTML = ''; return; }
@@ -953,6 +2072,7 @@
   }
 
   function render() {
+    if (!S) return;
     const a = document.activeElement;
     const fid = a && a.dataset ? a.dataset.fid : null;
     $('#qlist').innerHTML = S.qs.map(qHTML).join('');
@@ -965,6 +2085,7 @@
   }
 
   function paint() {
+    if (!S) return;
     const q = S.qs[S.open]; if (!q) return;
     const w = $(`#wave-${q.i}`); if (!w) return;
     w.style.setProperty('--p', (q.pos / 30 * 100) + '%');
@@ -973,12 +2094,9 @@
     $(`#time-${q.i}`).innerHTML = `<b>${fmt(q.pos)}</b> / 0:30`;
   }
 
-  /* Audio playback engine */
   function listen(q, s) {
     if (q.load[s] !== 'ready') return;
     const prevCur = q.cur;
-
-    // Pause any currently playing audio across all questions
     pauseAllAudio();
 
     if (prevCur !== null && prevCur !== s && !S.sync) {
@@ -1040,7 +2158,6 @@
     }
   }
 
-  /* Actions */
   function lock(q) {
     if (q.pick === null) return;
     q.locked = true;
@@ -1094,7 +2211,6 @@
     if (q && q.cur !== null) q.posS[q.cur] = q.pos;
   });
 
-  /* Waveform seeking */
   let dragging = null;
   function seekFrom(e, w) {
     const r = w.getBoundingClientRect();
@@ -1106,7 +2222,6 @@
       const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
       if (audio && audio.readyState >= 1) audio.currentTime = target;
     }
-    // Also sync all ready audio elements in this question if sync is enabled
     if (S.sync) {
       q.order.forEach((k, s) => {
         const a = audioMap.get(`${q.i}-${s}`);
@@ -1134,7 +2249,7 @@
     else return;
     if (q.cur !== null) {
       const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
-      if (audio && audio.readyState >= 1) audio.currentTime = q.pos;
+      if (audio && audio.readyState >= 1) audio.currentTime = target;
     }
     if (S.sync) {
       q.order.forEach((k, s) => {
@@ -1146,7 +2261,6 @@
     paint();
   });
 
-  /* Results actions */
   $('#results').addEventListener('click', e => {
     const t = e.target.closest('[data-r]'); if (!t) return;
     if (t.dataset.r === 'again') {
@@ -1166,9 +2280,9 @@
     }
   });
 
-  /* Reshuffle modal dialog */
   const dlg = $('#dlg');
   $('#reshuffle').addEventListener('click', () => {
+    if (!S) return;
     const n = S.qs.filter(q => q.locked).length;
     if (!n) {
       S = makeState(true);
@@ -1186,7 +2300,6 @@
     window.scrollTo({ top: 0, behavior: smooth() });
   });
 
-  /* Tips persistence */
   if (localStorage.getItem('blind_test_tips_dismissed') === 'true') {
     $('#tips').open = false;
   }
@@ -1196,9 +2309,688 @@
     $('#tips summary').focus();
   });
 
-  /* Initialize */
-  S = makeState(false);
-  render();
+  /* ==========================================================================
+     SCIENTIFIC ABX MODE STATE & LOGIC
+     ========================================================================== */
+  let sciSetup = {
+    codec: 'aac256',
+    trackCount: 5,
+    trialsPerTrack: 10
+  };
+
+  let sciTestState = null;
+  let sciPlayheadInterval = null;
+  let restCountdownInterval = null;
+
+  function updatePreRegStats() {
+    const codecRadio = $('input[name="sci-codec"]:checked');
+    const tracksRadio = $('input[name="sci-tracks"]:checked');
+    const presetRadio = $('input[name="sci-preset"]:checked');
+
+    if (codecRadio) sciSetup.codec = codecRadio.value;
+    if (tracksRadio) sciSetup.trackCount = parseInt(tracksRadio.value, 10);
+    if (presetRadio) sciSetup.trialsPerTrack = parseInt(presetRadio.value, 10);
+
+    // Update active classes on selectable cards
+    document.querySelectorAll('.codec-options .option-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.codec === sciSetup.codec);
+    });
+    document.querySelectorAll('.track-options .option-card').forEach(c => {
+      c.classList.toggle('active', parseInt(c.dataset.tracks, 10) === sciSetup.trackCount);
+    });
+    document.querySelectorAll('.preset-options .preset-card').forEach(c => {
+      c.classList.toggle('active', parseInt(c.dataset.preset, 10) === sciSetup.trialsPerTrack);
+    });
+
+    // Update preset option counters
+    const busyN = $('#preset-busy-n');
+    const curiousN = $('#preset-curious-n');
+    const seriousN = $('#preset-serious-n');
+    if (busyN) busyN.textContent = sciSetup.trackCount * 5;
+    if (curiousN) curiousN.textContent = sciSetup.trackCount * 10;
+    if (seriousN) seriousN.textContent = sciSetup.trackCount * 20;
+
+    if (typeof ScientificStats !== 'undefined') {
+      const stats = ScientificStats.getPresetStats(sciSetup.trackCount, sciSetup.trialsPerTrack);
+      const statN = $('#stat-n');
+      const statScrit = $('#stat-scrit');
+      const statAlpha = $('#stat-alpha');
+      const statMde = $('#stat-mde');
+      const statNote = $('#stat-note');
+
+      const totalN = stats.totalN !== undefined ? stats.totalN : stats.N;
+      const trueAlpha = stats.trueAlpha !== undefined ? stats.trueAlpha : stats.alpha;
+      const mdePct = stats.minDetectableEffectPercent !== undefined ? stats.minDetectableEffectPercent : (stats.minDetectableEffect80 ? (stats.minDetectableEffect80 * 100) : (stats.mde ? stats.mde * 100 : 0));
+
+      if (statN) statN.textContent = totalN;
+      if (statScrit) {
+        const pct = stats.thresholdPercent !== undefined ? stats.thresholdPercent : Math.round((stats.threshold / totalN) * 100);
+        statScrit.textContent = `${stats.threshold} correct (${pct}%)`;
+      }
+      if (statAlpha && trueAlpha !== undefined) {
+        statAlpha.textContent = `p = ${trueAlpha < 0.0001 ? '< 0.0001' : trueAlpha.toFixed(4)} (≤ 0.05)`;
+      }
+      if (statMde && mdePct !== undefined) {
+        statMde.textContent = `${Number(mdePct).toFixed(1)}%`;
+      }
+      if (statNote) {
+        statNote.textContent = `To establish a statistically significant audible difference (p ≤ 0.05), you must achieve at least ${stats.threshold} correct answers out of ${totalN} trials.`;
+      }
+    }
+  }
+
+  // Setup form event listeners
+  document.querySelectorAll('input[name="sci-codec"], input[name="sci-tracks"], input[name="sci-preset"]').forEach(radio => {
+    radio.addEventListener('change', updatePreRegStats);
+  });
+  document.querySelectorAll('.codec-options .option-card, .track-options .option-card, .preset-options .preset-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio && !radio.checked) {
+        radio.checked = true;
+        updatePreRegStats();
+      }
+    });
+  });
+
+  $('#btn-show-hotkeys').addEventListener('click', () => {
+    $('#dlg-instructions').showModal();
+  });
+  $('#dlg-inst-close').addEventListener('click', () => {
+    $('#dlg-instructions').close();
+  });
+
+  function pickTracksForScientificTest(count) {
+    let categories = [...SONG_CATEGORIES];
+    if (count < 8) {
+      categories = shuffle(categories).slice(0, count);
+    }
+    return categories.map(cat => {
+      const contenderIdx = Math.floor(Math.random() * cat.contenders.length);
+      return { ...cat.contenders[contenderIdx] };
+    });
+  }
+
+  async function startScientificTest() {
+    updatePreRegStats();
+    const selectedTracks = pickTracksForScientificTest(sciSetup.trackCount);
+
+    sciTestState = {
+      codec: sciSetup.codec,
+      trackCount: sciSetup.trackCount,
+      trialsPerTrack: sciSetup.trialsPerTrack,
+      totalTrials: sciSetup.trackCount * sciSetup.trialsPerTrack,
+      tracks: selectedTracks,
+      currentTrackIndex: 0,
+      currentTrialIndex: 0,
+      overallTrialIndex: 0,
+      currentChoice: null,
+      trials: [],
+      startTime: new Date().toISOString()
+    };
+
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.init();
+    }
+
+    switchView(VIEWS.SCI_TRIAL);
+    await loadScientificTrack(0);
+    startSciLiveLoop();
+  }
+
+  $('#btn-begin-scientific').addEventListener('click', startScientificTest);
+  $('#btn-retake-scientific').addEventListener('click', startScientificTest);
+  $('#btn-change-setup').addEventListener('click', () => {
+    switchView(VIEWS.SCI_SETUP);
+    updatePreRegStats();
+  });
+
+  async function loadScientificTrack(trackIndex) {
+    if (!sciTestState || !sciTestState.tracks[trackIndex]) return;
+    const track = sciTestState.tracks[trackIndex];
+
+    const cover = $('#sci-cover');
+    if (cover) {
+      cover.src = track.cover;
+      cover.alt = `${track.title} album art`;
+    }
+    const titleEl = $('#sci-title');
+    if (titleEl) titleEl.textContent = track.title;
+    const artistEl = $('#sci-artist');
+    if (artistEl) artistEl.textContent = track.artist;
+    const catEl = $('#sci-cat');
+    if (catEl) catEl.textContent = track.cat;
+    const hintEl = $('#sci-hint');
+    if (hintEl) hintEl.innerHTML = `<b>Listen for:</b> ${esc(track.hint)}`;
+    const subB = $('#source-b-sub');
+    if (subB) subB.textContent = CODECS[sciTestState.codec].name;
+
+    // Render waveform bars
+    const bars = getWaveBars(track.id);
+    const barsHTML = bars.map(h => `<i style="height:${h}px"></i>`).join('');
+    const bg = $('#sci-wave-bg');
+    const fill = $('#sci-wave-fill');
+    if (bg) bg.innerHTML = barsHTML;
+    if (fill) fill.innerHTML = barsHTML;
+
+    // Reset scrubber UI
+    const wave = $('#sci-wave');
+    if (wave) wave.style.setProperty('--p', '0%');
+    const timeEl = $('#sci-time');
+    if (timeEl) timeEl.innerHTML = '<b>0:00</b> / 0:30';
+
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.stop();
+      await ScientificAudioEngine.loadTrack(track.files.flac, track.files[sciTestState.codec]);
+      ScientificAudioEngine.assignTrialTarget(trackIndex, sciTestState.currentTrialIndex);
+      ScientificAudioEngine.resetTrialAudition();
+    }
+
+    updateTrialMeta();
+  }
+
+  function updateTrialMeta() {
+    if (!sciTestState) return;
+    const trackNum = sciTestState.currentTrackIndex + 1;
+    const trackTotal = sciTestState.trackCount;
+    const trialNum = sciTestState.currentTrialIndex + 1;
+    const trialTotal = sciTestState.trialsPerTrack;
+    const overallNum = sciTestState.overallTrialIndex + 1;
+    const overallTotal = sciTestState.totalTrials;
+
+    $('#trial-meta-track').textContent = `Track ${trackNum} of ${trackTotal}`;
+    $('#trial-meta-trial').textContent = `Trial ${trialNum} of ${trialTotal}`;
+    $('#trial-meta-total').textContent = `Total: Trial ${overallNum} of ${overallTotal}`;
+
+    const fillPct = Math.round((sciTestState.overallTrialIndex / overallTotal) * 100);
+    $('#trial-progress-fill').style.width = `${Math.max(2, fillPct)}%`;
+
+    sciTestState.currentChoice = null;
+    const btnA = $('#btn-choose-a');
+    const btnB = $('#btn-choose-b');
+    const btnCommit = $('#btn-commit-next');
+    const commitHint = $('#commit-hint');
+    const gateMsg = $('#gate-message');
+
+    if (btnA) { btnA.classList.remove('active'); btnA.disabled = true; }
+    if (btnB) { btnB.classList.remove('active'); btnB.disabled = true; }
+    if (btnCommit) btnCommit.disabled = true;
+    if (commitHint) commitHint.textContent = 'Make a choice above to enable commit';
+    if (gateMsg) {
+      gateMsg.className = 'gate-message';
+      gateMsg.textContent = '🔒 Audition A, X, and B for at least 2.0s each to unlock choices';
+    }
+
+    ['a', 'x', 'b'].forEach(s => {
+      const btn = $(`#btn-source-${s}`);
+      if (btn) btn.classList.remove('active');
+      const gate = $(`#gate-${s}`);
+      if (gate) {
+        gate.className = 'source-gate';
+        const t = gate.querySelector('.gate-time');
+        const st = gate.querySelector('.gate-status');
+        if (t) t.textContent = '0.0s';
+        if (st) st.textContent = 'Need 2.0s';
+      }
+    });
+
+    updateTopBar();
+  }
+
+  function updateSciPlaybackUI() {
+    if (currentView !== VIEWS.SCI_TRIAL || typeof ScientificAudioEngine === 'undefined') return;
+
+    const pos = ScientificAudioEngine.getPlayheadPosition();
+    const stats = ScientificAudioEngine.getAuditionStats();
+
+    // Waveform playhead
+    const dur = pos.duration || 30;
+    const p = (pos.currentTime / dur * 100).toFixed(2);
+    const wave = $('#sci-wave');
+    if (wave) {
+      wave.style.setProperty('--p', p + '%');
+      wave.setAttribute('aria-valuenow', Math.round(pos.currentTime));
+    }
+    const timeEl = $('#sci-time');
+    if (timeEl) {
+      timeEl.innerHTML = `<b>${fmt(pos.currentTime)}</b> / ${fmt(dur)}`;
+    }
+
+    // Source buttons active state
+    ['a', 'x', 'b'].forEach(k => {
+      const upper = k.toUpperCase();
+      const btn = $(`#btn-source-${k}`);
+      if (btn) {
+        if (pos.isPlaying && pos.activeSource === upper) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+
+    // Audition gates
+    const gates = [
+      { key: 'a', dur: stats.durationA },
+      { key: 'x', dur: stats.durationX },
+      { key: 'b', dur: stats.durationB }
+    ];
+    gates.forEach(item => {
+      const gate = $(`#gate-${item.key}`);
+      if (gate) {
+        const tEl = gate.querySelector('.gate-time');
+        const sEl = gate.querySelector('.gate-status');
+        if (tEl) tEl.textContent = `${item.dur.toFixed(1)}s`;
+        if (item.dur >= 2.0) {
+          gate.className = 'source-gate ok';
+          if (sEl) sEl.textContent = '✓ Ready';
+        } else {
+          gate.className = 'source-gate';
+          if (sEl) sEl.textContent = `Need ${(2.0 - item.dur).toFixed(1)}s`;
+        }
+      }
+    });
+
+    // Check engagement gate
+    const gateMsg = $('#gate-message');
+    const btnChooseA = $('#btn-choose-a');
+    const btnChooseB = $('#btn-choose-b');
+    if (stats.gateSatisfied) {
+      if (btnChooseA && btnChooseA.disabled) btnChooseA.disabled = false;
+      if (btnChooseB && btnChooseB.disabled) btnChooseB.disabled = false;
+      if (gateMsg && !gateMsg.classList.contains('unlocked')) {
+        gateMsg.className = 'gate-message unlocked';
+        gateMsg.textContent = '✓ Choices unlocked. Select your answer:';
+      }
+    } else {
+      if (btnChooseA && !btnChooseA.disabled) btnChooseA.disabled = true;
+      if (btnChooseB && !btnChooseB.disabled) btnChooseB.disabled = true;
+      if (gateMsg && gateMsg.classList.contains('unlocked')) {
+        gateMsg.className = 'gate-message';
+        gateMsg.textContent = '🔒 Audition A, X, and B for at least 2.0s each to unlock choices';
+      }
+    }
+  }
+
+  function startSciLiveLoop() {
+    if (sciPlayheadInterval) clearInterval(sciPlayheadInterval);
+    sciPlayheadInterval = setInterval(updateSciPlaybackUI, 50);
+  }
+
+  // Source audition buttons
+  $('#btn-source-a').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('A');
+  });
+  $('#btn-source-x').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('X');
+  });
+  $('#btn-source-b').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('B');
+  });
+
+  // Transport seek / stop
+  $('#btn-sci-rewind').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.setPlayhead(0);
+  });
+  $('#btn-sci-seek-back').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(-5);
+  });
+  $('#btn-sci-seek-fwd').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(5);
+  });
+  $('#btn-sci-stop').addEventListener('click', () => {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.stop();
+  });
+
+  // Waveform interactive scrubber
+  let sciDragging = false;
+  function seekSciFrom(e) {
+    const w = $('#sci-wave');
+    if (!w || typeof ScientificAudioEngine === 'undefined') return;
+    const rect = w.getBoundingClientRect();
+    const pos = ScientificAudioEngine.getPlayheadPosition();
+    const dur = pos.duration || 30;
+    const target = Math.max(0, Math.min(dur, ((e.clientX - rect.left) / rect.width) * dur));
+    ScientificAudioEngine.setPlayhead(target);
+  }
+
+  $('#sci-wave').addEventListener('pointerdown', e => {
+    sciDragging = true;
+    seekSciFrom(e);
+  });
+  window.addEventListener('pointermove', e => { if (sciDragging) seekSciFrom(e); });
+  window.addEventListener('pointerup', () => { sciDragging = false; });
+
+  // Choices
+  function setScientificChoice(choice) {
+    if (typeof ScientificAudioEngine === 'undefined') return;
+    const stats = ScientificAudioEngine.getAuditionStats();
+    if (!stats.gateSatisfied) return;
+
+    sciTestState.currentChoice = choice;
+    const btnA = $('#btn-choose-a');
+    const btnB = $('#btn-choose-b');
+    const btnCommit = $('#btn-commit-next');
+    const commitHint = $('#commit-hint');
+
+    if (choice === 'A') {
+      btnA.classList.add('active');
+      btnB.classList.remove('active');
+      btnCommit.disabled = false;
+      commitHint.textContent = 'Selected: X is A. Press Enter or click Next to advance.';
+    } else if (choice === 'B') {
+      btnB.classList.add('active');
+      btnA.classList.remove('active');
+      btnCommit.disabled = false;
+      commitHint.textContent = 'Selected: X is B. Press Enter or click Next to advance.';
+    }
+  }
+
+  $('#btn-choose-a').addEventListener('click', () => setScientificChoice('A'));
+  $('#btn-choose-b').addEventListener('click', () => setScientificChoice('B'));
+
+  // Commit / Advance
+  async function commitScientificTrial() {
+    if (!sciTestState || !sciTestState.currentChoice || typeof ScientificAudioEngine === 'undefined') return;
+
+    const target = ScientificAudioEngine.revealTarget(sciTestState.currentTrackIndex, sciTestState.currentTrialIndex);
+    const stats = ScientificAudioEngine.getAuditionStats();
+    const isCorrect = (sciTestState.currentChoice === target);
+    const track = sciTestState.tracks[sciTestState.currentTrackIndex];
+
+    sciTestState.trials.push({
+      overallIndex: sciTestState.overallTrialIndex,
+      trackIndex: sciTestState.currentTrackIndex,
+      trackId: track.id,
+      trackTitle: track.title,
+      artist: track.artist,
+      cat: track.cat,
+      trialIndex: sciTestState.currentTrialIndex,
+      target: target,
+      choice: sciTestState.currentChoice,
+      isCorrect: isCorrect,
+      durationA: stats.durationA,
+      durationX: stats.durationX,
+      durationB: stats.durationB,
+      timestamp: new Date().toISOString()
+    });
+
+    sciTestState.currentChoice = null;
+    sciTestState.currentTrialIndex++;
+    sciTestState.overallTrialIndex++;
+
+    if (sciTestState.currentTrialIndex < sciTestState.trialsPerTrack) {
+      // Next trial on same track
+      ScientificAudioEngine.assignTrialTarget(sciTestState.currentTrackIndex, sciTestState.currentTrialIndex);
+      ScientificAudioEngine.resetTrialAudition();
+      updateTrialMeta();
+    } else {
+      // Track complete
+      ScientificAudioEngine.stop();
+      sciTestState.currentTrackIndex++;
+      sciTestState.currentTrialIndex = 0;
+
+      if (sciTestState.currentTrackIndex < sciTestState.trackCount) {
+        showScientificRest();
+      } else {
+        showScientificResults();
+      }
+    }
+  }
+
+  $('#btn-commit-next').addEventListener('click', commitScientificTrial);
+
+  // Keyboard Shortcuts for Scientific Mode
+  window.addEventListener('keydown', e => {
+    if (currentView !== VIEWS.SCI_TRIAL) return;
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag === 'input' || activeTag === 'textarea' || document.querySelector('dialog[open]')) return;
+
+    const k = e.key.toLowerCase();
+    if (k === 'a') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('A');
+    } else if (k === 'x') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('X');
+    } else if (k === 'b') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('B');
+    } else if (e.key === '1') {
+      e.preventDefault();
+      setScientificChoice('A');
+    } else if (e.key === '2') {
+      e.preventDefault();
+      setScientificChoice('B');
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      commitScientificTrial();
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        const pos = ScientificAudioEngine.getPlayheadPosition();
+        if (pos.isPlaying) {
+          ScientificAudioEngine.stop();
+        } else {
+          ScientificAudioEngine.playSource(pos.activeSource || 'X');
+        }
+      }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(-5);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(5);
+    }
+  });
+
+  // Rest View
+  function showScientificRest() {
+    switchView(VIEWS.SCI_REST);
+    const completedTrack = sciTestState.tracks[sciTestState.currentTrackIndex - 1];
+    $('#rest-completed-track').textContent = `Track ${sciTestState.currentTrackIndex} of ${sciTestState.trackCount} Completed: ${completedTrack.title} (${completedTrack.artist})`;
+
+    let remaining = 30;
+    $('#rest-seconds').textContent = remaining;
+
+    if (restCountdownInterval) clearInterval(restCountdownInterval);
+    restCountdownInterval = setInterval(() => {
+      remaining--;
+      if (remaining >= 0) {
+        $('#rest-seconds').textContent = remaining;
+      } else {
+        clearInterval(restCountdownInterval);
+      }
+    }, 1000);
+  }
+
+  async function continueFromRest() {
+    if (restCountdownInterval) clearInterval(restCountdownInterval);
+    switchView(VIEWS.SCI_TRIAL);
+    await loadScientificTrack(sciTestState.currentTrackIndex);
+  }
+
+  $('#btn-rest-continue').addEventListener('click', continueFromRest);
+
+  // Results View
+  function showScientificResults() {
+    if (sciPlayheadInterval) clearInterval(sciPlayheadInterval);
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.stop();
+    switchView(VIEWS.SCI_RESULTS);
+
+    const totalN = sciTestState.trials.length;
+    const totalS = sciTestState.trials.filter(t => t.isCorrect).length;
+    const pValue = ScientificStats.exactBinomialPValue(totalS, totalN, 0.5);
+    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.95);
+    const verdict = ScientificStats.formatResultVerdict(totalS, totalN, pValue, ci);
+
+    // Primary Verdict Banner
+    const banner = $('#sci-verdict-banner');
+    banner.className = verdict.detected ? 'verdict-banner detected' : 'verdict-banner undetected';
+    $('#sci-verdict-tag').textContent = `Scientific ABX Result • ${CODECS[sciTestState.codec].name}`;
+    $('#sci-verdict-title').textContent = verdict.title;
+    $('#sci-verdict-exp').textContent = verdict.explanation;
+
+    // Metric cards
+    $('#res-score').textContent = `${totalS} / ${totalN}`;
+    $('#res-score-pct').textContent = `${((totalS / totalN) * 100).toFixed(1)}% correct`;
+    $('#res-p').textContent = `p = ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(4)}`;
+    $('#res-ci').textContent = `[${(ci.lower * 100).toFixed(1)}%, ${(ci.upper * 100).toFixed(1)}%]`;
+
+    // Response bias
+    const countA = sciTestState.trials.filter(t => t.choice === 'A').length;
+    const countB = sciTestState.trials.filter(t => t.choice === 'B').length;
+    const bias = ScientificStats.checkResponseBias(countA, countB);
+    $('#res-bias').textContent = bias.biased ? 'Biased' : 'Unbiased';
+    $('#res-bias-sub').textContent = `${countA} A vs ${countB} B (p = ${bias.pValue < 0.0001 ? '< 0.0001' : bias.pValue.toFixed(3)})`;
+
+    // Per-track battery with Holm correction
+    const trackBattery = sciTestState.tracks.map((t, idx) => {
+      const trackTrials = sciTestState.trials.filter(tr => tr.trackIndex === idx);
+      const s = trackTrials.filter(tr => tr.isCorrect).length;
+      const n = trackTrials.length;
+      const p = ScientificStats.exactBinomialPValue(s, n, 0.5);
+      return {
+        id: t.id,
+        title: t.title,
+        artist: t.artist,
+        cat: t.cat,
+        s,
+        n,
+        pValue: p
+      };
+    });
+    const holmResults = ScientificStats.holmCorrection(trackBattery);
+
+    const tbody = $('#sci-track-tbody');
+    tbody.innerHTML = holmResults.map(item => {
+      const pct = item.n > 0 ? ((item.s / item.n) * 100).toFixed(0) : '0';
+      let badge;
+      if (item.descriptiveOnly) {
+        badge = '<span class="status-badge neutral">Descriptive Only (T ≤ 5)</span>';
+      } else if (item.significant) {
+        badge = '<span class="status-badge ok">Significant (p ≤ 0.05)</span>';
+      } else {
+        badge = '<span class="status-badge neutral">Not Significant</span>';
+      }
+      return `<tr>
+        <td><b>${esc(item.title)}</b></td>
+        <td>${esc(item.artist)} &middot; <span class="sub">${esc(item.cat)}</span></td>
+        <td><b>${item.s} / ${item.n}</b> (${pct}%)</td>
+        <td>${item.pValue < 0.0001 ? '< 0.0001' : item.pValue.toFixed(4)}</td>
+        <td>${item.pAdjusted < 0.0001 ? '< 0.0001' : item.pAdjusted.toFixed(4)}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+
+    // Response bias diagnostic text
+    const biasText = $('#sci-bias-text');
+    if (bias.biased) {
+      biasText.innerHTML = `<b>⚠️ Response Bias Detected (p = ${bias.pValue.toFixed(4)}):</b> You chose "X is A" ${bias.countA} times (${(bias.propA * 100).toFixed(1)}%) and "X is B" ${bias.countB} times. This statistically significant imbalance indicates a systematic selection bias when uncertain.`;
+    } else {
+      biasText.innerHTML = `<b>✓ Balanced Response Distribution:</b> You chose "X is A" ${bias.countA} times (${(bias.propA * 100).toFixed(1)}%) and "X is B" ${bias.countB} times (two-sided binomial test p = ${bias.pValue.toFixed(4)}). No statistically significant response bias was detected.`;
+    }
+  }
+
+  function downloadAuditLog() {
+    if (!sciTestState) return;
+    const totalN = sciTestState.trials.length;
+    const totalS = sciTestState.trials.filter(t => t.isCorrect).length;
+    const pValue = ScientificStats.exactBinomialPValue(totalS, totalN, 0.5);
+    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.95);
+    const verdict = ScientificStats.formatResultVerdict(totalS, totalN, pValue, ci);
+    const countA = sciTestState.trials.filter(t => t.choice === 'A').length;
+    const countB = sciTestState.trials.filter(t => t.choice === 'B').length;
+    const bias = ScientificStats.checkResponseBias(countA, countB);
+
+    const auditData = {
+      testProtocol: "Scientific ABX (Double-Blind Perceptual Test)",
+      version: "2.0",
+      timestamp: new Date().toISOString(),
+      testedCodec: CODECS[sciTestState.codec].name,
+      referenceCodec: "CD Quality 16-bit / 44.1 kHz FLAC Master",
+      trackCount: sciTestState.trackCount,
+      trialsPerTrack: sciTestState.trialsPerTrack,
+      totalTrials: totalN,
+      summary: {
+        score: totalS,
+        total: totalN,
+        percentage: (totalS / totalN) * 100,
+        pValue: pValue,
+        ci95: ci,
+        verdict: verdict.title,
+        verdictExplanation: verdict.explanation
+      },
+      responseBias: bias,
+      trials: sciTestState.trials
+    };
+
+    const blob = new Blob([JSON.stringify(auditData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `abx-audit-${sciTestState.codec}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function copyMarkdownReport() {
+    if (!sciTestState) return;
+    const totalN = sciTestState.trials.length;
+    const totalS = sciTestState.trials.filter(t => t.isCorrect).length;
+    const pValue = ScientificStats.exactBinomialPValue(totalS, totalN, 0.5);
+    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.95);
+    const verdict = ScientificStats.formatResultVerdict(totalS, totalN, pValue, ci);
+
+    let md = `# Scientific ABX Test Report\n\n`;
+    md += `**Tested Codec:** ${CODECS[sciTestState.codec].name} vs CD Lossless FLAC Master\n`;
+    md += `**Date:** ${new Date().toLocaleDateString()}\n`;
+    md += `**Verdict:** ${verdict.title}\n\n`;
+    md += `> ${verdict.explanation}\n\n`;
+    md += `## Statistical Metrics\n`;
+    md += `- **Score:** ${totalS} / ${totalN} (${((totalS / totalN) * 100).toFixed(1)}%)\n`;
+    md += `- **Exact Binomial p-value:** ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(4)} (α ≤ 0.05)\n`;
+    md += `- **95% Clopper-Pearson CI:** [${(ci.lower * 100).toFixed(1)}%, ${(ci.upper * 100).toFixed(1)}%]\n\n`;
+    md += `## Per-Track Breakdown\n`;
+    md += `| Track | Artist | Category | Score | Raw p | Holm-Adjusted p |\n`;
+    md += `|---|---|---|---|---|---|\n`;
+
+    const trackBattery = sciTestState.tracks.map((t, idx) => {
+      const trackTrials = sciTestState.trials.filter(tr => tr.trackIndex === idx);
+      const s = trackTrials.filter(tr => tr.isCorrect).length;
+      const n = trackTrials.length;
+      const p = ScientificStats.exactBinomialPValue(s, n, 0.5);
+      return { title: t.title, artist: t.artist, cat: t.cat, s, n, pValue: p };
+    });
+    const holmResults = ScientificStats.holmCorrection(trackBattery);
+
+    holmResults.forEach(item => {
+      md += `| ${item.title} | ${item.artist} | ${item.cat} | ${item.s}/${item.n} | ${item.pValue.toFixed(4)} | ${item.pAdjusted.toFixed(4)} |\n`;
+    });
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(md).then(() => {
+        const btn = $('#btn-copy-markdown');
+        btn.textContent = 'Copied to Clipboard!';
+        setTimeout(() => { btn.textContent = 'Copy Markdown Report'; }, 2500);
+      }).catch(() => {
+        const btn = $('#btn-copy-markdown');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy Markdown Report'; }, 2500);
+      });
+    }
+  }
+
+  $('#btn-download-audit').addEventListener('click', downloadAuditLog);
+  $('#btn-copy-markdown').addEventListener('click', copyMarkdownReport);
+
+  /* ==========================================================================
+     INITIALIZATION
+     ========================================================================== */
+  // Default landing view is Mode Selection Portal
+  switchView(VIEWS.MODE_SELECT);
 </script>
 </body>
 </html>
