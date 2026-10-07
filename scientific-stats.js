@@ -175,6 +175,8 @@
    */
   function clopperPearsonCI(s, n, alpha = 0.05) {
     if (n <= 0) return { lower: 0.0, upper: 1.0 };
+    s = Math.max(0, Math.min(n, s));
+    if (alpha > 0.5) alpha = 1.0 - alpha;
 
     let lower, upper;
     const halfAlpha = alpha * 0.5;
@@ -206,6 +208,9 @@
    */
   function clopperPearsonUpperBound(s, n, alpha = 0.05) {
     if (n <= 0) return 1.0;
+    s = Math.max(0, Math.min(n, s));
+    if (alpha > 0.5) alpha = 1.0 - alpha;
+
     if (s === 0) {
       return 1.0 - Math.pow(alpha, 1.0 / n);
     }
@@ -273,6 +278,7 @@
         pAdjusted: item.pAdjusted,
         significant: isSig,
         status,
+        descriptiveOnly: isDescriptiveOnly,
         rank: item.rank
       };
     });

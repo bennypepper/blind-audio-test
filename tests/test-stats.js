@@ -134,6 +134,36 @@ test('Clopper-Pearson one-sided 95% upper bound for null result S=50, N=100 is â
   assert(ub <= 0.587, 'Upper bound should be <= 58.7%');
 });
 
+test('Clopper-Pearson alpha normalization (alpha > 0.5 maps to 1 - alpha)', () => {
+  const ci005 = stats.clopperPearsonCI(50, 100, 0.05);
+  const ci095 = stats.clopperPearsonCI(50, 100, 0.95);
+  assert.strictEqual(ci005.lower, ci095.lower, 'alpha=0.05 and alpha=0.95 should give identical lower bound');
+  assert.strictEqual(ci005.upper, ci095.upper, 'alpha=0.05 and alpha=0.95 should give identical upper bound');
+
+  const ub005 = stats.clopperPearsonUpperBound(50, 100, 0.05);
+  const ub095 = stats.clopperPearsonUpperBound(50, 100, 0.95);
+  assert.strictEqual(ub005, ub095, 'alpha=0.05 and alpha=0.95 should give identical upper bound');
+});
+
+test('Clopper-Pearson success count s is clamped to [0, n]', () => {
+  const ciNegative = stats.clopperPearsonCI(-5, 50, 0.05);
+  const ciZero = stats.clopperPearsonCI(0, 50, 0.05);
+  assert.strictEqual(ciNegative.lower, ciZero.lower);
+  assert.strictEqual(ciNegative.upper, ciZero.upper);
+
+  const ciOverflow = stats.clopperPearsonCI(60, 50, 0.05);
+  const ciFull = stats.clopperPearsonCI(50, 50, 0.05);
+  assert.strictEqual(ciOverflow.lower, ciFull.lower);
+  assert.strictEqual(ciOverflow.upper, ciFull.upper);
+
+  const ubNegative = stats.clopperPearsonUpperBound(-10, 50, 0.05);
+  const ubZero = stats.clopperPearsonUpperBound(0, 50, 0.05);
+  assert.strictEqual(ubNegative, ubZero);
+
+  const ubOverflow = stats.clopperPearsonUpperBound(60, 50, 0.05);
+  assert.strictEqual(ubOverflow, 1.0);
+});
+
 // -------------------------------------------------------------
 // 3. Holm-Bonferroni Multi-Track Correction
 // -------------------------------------------------------------
@@ -171,26 +201,33 @@ test('Holm step-down ordering and adjustments', () => {
   const t1 = adjusted.find(t => t.songId === 'song1');
   assert(t1.significant, 'Track 1 with 18/20 should be significant');
   assert.strictEqual(t1.status, 'significant');
+  assert.strictEqual(t1.descriptiveOnly, false);
   assert.strictEqual(t1.rank, 1);
 
   // Track 2: s=10/20 (pRaw â‰ˆ 0.588) -> not significant
   const t2 = adjusted.find(t => t.songId === 'song2');
   assert(!t2.significant, 'Track 2 with 10/20 should not be significant');
   assert.strictEqual(t2.status, 'not_significant');
+  assert.strictEqual(t2.descriptiveOnly, false);
 });
 
-test('Holm correction marks T=5 trials as descriptive_only', () => {
+test('Holm correction marks T=5 trials as descriptive_only and sets descriptiveOnly property', () => {
   const trackResults = [
     { songId: 'song1', s: 5, n: 5 },
     { songId: 'song2', s: 4, n: 5 },
-    { songId: 'song3', s: 3, n: 5 }
+    { songId: 'song3', s: 3, n: 5 },
+    { songId: 'song4', s: 8, n: 10 }
   ];
 
   const adjusted = stats.holmCorrection(trackResults);
-  adjusted.forEach(t => {
+  adjusted.slice(0, 3).forEach(t => {
     assert.strictEqual(t.status, 'descriptive_only', 'T=5 trials must be marked descriptive_only');
+    assert.strictEqual(t.descriptiveOnly, true, 'T=5 trials must have descriptiveOnly: true');
     assert.strictEqual(t.significant, false, 'T=5 trials cannot achieve statistical significance');
   });
+
+  const t4 = adjusted.find(t => t.songId === 'song4');
+  assert.strictEqual(t4.descriptiveOnly, false, 'T=10 trials must have descriptiveOnly: false');
 });
 
 test('Holm correction handles empty array gracefully', () => {

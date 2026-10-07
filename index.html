@@ -2702,6 +2702,7 @@
 
   // Commit / Advance
   async function commitScientificTrial() {
+    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.stop();
     if (!sciTestState || !sciTestState.currentChoice || typeof ScientificAudioEngine === 'undefined') return;
 
     const target = ScientificAudioEngine.revealTarget(sciTestState.currentTrackIndex, sciTestState.currentTrialIndex);
@@ -2796,7 +2797,7 @@
   });
 
   window.addEventListener('beforeunload', e => {
-    if ((currentView === VIEWS.SCI_TRIAL || currentView === VIEWS.SCI_REST) && sciSession && sciSession.results.length > 0) {
+    if ((currentView === VIEWS.SCI_TRIAL || currentView === VIEWS.SCI_REST) && typeof sciTestState !== 'undefined' && sciTestState && sciTestState.trials && sciTestState.trials.length > 0) {
       e.preventDefault();
       e.returnValue = '';
     }
@@ -2839,7 +2840,7 @@
     const totalN = sciTestState.trials.length;
     const totalS = sciTestState.trials.filter(t => t.isCorrect).length;
     const pValue = ScientificStats.exactBinomialPValue(totalS, totalN, 0.5);
-    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.95);
+    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.05);
     const verdict = ScientificStats.formatResultVerdict(totalS, totalN, pValue, ci);
 
     // Primary Verdict Banner
@@ -2884,7 +2885,7 @@
     tbody.innerHTML = holmResults.map(item => {
       const pct = item.n > 0 ? ((item.s / item.n) * 100).toFixed(0) : '0';
       let badge;
-      if (item.descriptiveOnly) {
+      if (item.descriptiveOnly || item.status === 'descriptive_only' || item.n <= 5) {
         badge = '<span class="status-badge neutral">Descriptive Only (T ≤ 5)</span>';
       } else if (item.significant) {
         badge = '<span class="status-badge ok">Significant (p ≤ 0.05)</span>';
@@ -2915,7 +2916,7 @@
     const totalN = sciTestState.trials.length;
     const totalS = sciTestState.trials.filter(t => t.isCorrect).length;
     const pValue = ScientificStats.exactBinomialPValue(totalS, totalN, 0.5);
-    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.95);
+    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.05);
     const verdict = ScientificStats.formatResultVerdict(totalS, totalN, pValue, ci);
     const countA = sciTestState.trials.filter(t => t.choice === 'A').length;
     const countB = sciTestState.trials.filter(t => t.choice === 'B').length;
@@ -2959,7 +2960,7 @@
     const totalN = sciTestState.trials.length;
     const totalS = sciTestState.trials.filter(t => t.isCorrect).length;
     const pValue = ScientificStats.exactBinomialPValue(totalS, totalN, 0.5);
-    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.95);
+    const ci = ScientificStats.clopperPearsonCI(totalS, totalN, 0.05);
     const verdict = ScientificStats.formatResultVerdict(totalS, totalN, pValue, ci);
 
     let md = `# Scientific ABX Test Report\n\n`;

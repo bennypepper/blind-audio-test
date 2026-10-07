@@ -495,6 +495,7 @@ function createMockEnvironment() {
   mockDocument.body.appendChild = function() {};
   mockDocument.body.removeChild = function() {};
 
+  const eventListeners = {};
   const mockWindow = {
     document: mockDocument,
     Audio: class MockAudio {
@@ -503,8 +504,20 @@ function createMockEnvironment() {
       pause() {}
       addEventListener() {}
     },
-    addEventListener() {},
-    removeEventListener() {},
+    addEventListener(event, fn) {
+      if (!eventListeners[event]) eventListeners[event] = [];
+      eventListeners[event].push(fn);
+    },
+    removeEventListener(event, fn) {
+      if (eventListeners[event]) {
+        eventListeners[event] = eventListeners[event].filter(h => h !== fn);
+      }
+    },
+    trigger(event, eventObj) {
+      if (eventListeners[event]) {
+        eventListeners[event].forEach(fn => fn(eventObj));
+      }
+    },
     scrollTo() {},
     matchMedia() { return { matches: false }; },
     localStorage: {
@@ -531,7 +544,7 @@ function createMockEnvironment() {
     setTimeout: (fn) => setTimeout(fn, 0)
   };
 
-  return { mockWindow, mockDocument, domNodes, allElements };
+  return { mockWindow, mockDocument, domNodes, allElements, eventListeners };
 }
 
 test('SPA state machine initializes landing view at view-mode-select', () => {
@@ -765,7 +778,18 @@ test('Commit workflow: reveals target, appends trial record, and advances trial 
     ScientificAudioEngine.assignTrialTarget(0, 0);
   `, sandbox);
 
+  // Verify audio engine stop is called on commit
+  let audioStopCalled = false;
+  const origStop = ScientificAudioEngine.stop;
+  ScientificAudioEngine.stop = () => {
+    audioStopCalled = true;
+    if (origStop) origStop.call(ScientificAudioEngine);
+  };
+
   await vm.runInContext(`commitScientificTrial();`, sandbox);
+  ScientificAudioEngine.stop = origStop;
+
+  assert.strictEqual(audioStopCalled, true, 'ScientificAudioEngine.stop() must be called on trial commit');
 
   const trials = vm.runInContext(`sciTestState.trials`, sandbox);
   assert.strictEqual(trials.length, 1, 'Trial record should be committed');
@@ -850,6 +874,58 @@ test('Full battery completion: renders results banner, Holm table, and response 
 
   const tbody = domNodes.get('sci-track-tbody');
   assert(tbody.innerHTML.includes('<tr>'), 'Track breakdown table should contain table rows');
+
+  // Verify descriptive-only badge rendered when T <= 5
+  vm.runInContext(`
+    // Change trials so each track has 5 trials
+    sciTestState.trialsPerTrack = 5;
+    sciTestState.trials = sciTestState.trials.filter(t => t.trialIndex < 5);
+    showScientificResults();
+  `, sandbox);
+  assert(tbody.innerHTML.includes('Descriptive Only (T ≤ 5)'), 'Must render descriptive-only badge for T <= 5');
+});
+
+test('beforeunload listener guards against accidental navigation during active trial without sciSession ReferenceError', () => {
+  const { mockWindow, mockDocument } = createMockEnvironment();
+  const ScientificStats = require(STATS_JS_PATH);
+  const ScientificAudioEngine = require(AUDIO_JS_PATH);
+
+  const sandbox = {
+    window: mockWindow,
+    document: mockDocument,
+    ScientificStats,
+    ScientificAudioEngine,
+    Audio: mockWindow.Audio,
+    matchMedia: mockWindow.matchMedia,
+    localStorage: mockWindow.localStorage,
+    setInterval: mockWindow.setInterval,
+    clearInterval: mockWindow.clearInterval,
+    setTimeout: mockWindow.setTimeout,
+    console
+  };
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  // When not in trial, event does not trigger preventDefault
+  const evt1 = { defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, returnValue: undefined };
+  mockWindow.trigger('beforeunload', evt1);
+  assert.strictEqual(evt1.defaultPrevented, false, 'Should not prevent unload outside trial view');
+
+  // When in trial with trials, it does prevent unload
+  vm.runInContext(`
+    switchView(VIEWS.SCI_TRIAL);
+    sciTestState = {
+      trials: [{ trialIndex: 0 }]
+    };
+  `, sandbox);
+
+  const evt2 = { defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, returnValue: undefined };
+  assert.doesNotThrow(() => {
+    mockWindow.trigger('beforeunload', evt2);
+  }, 'beforeunload handler must not throw ReferenceError');
+  assert.strictEqual(evt2.defaultPrevented, true, 'Should prevent unload when active trial has progress');
+  assert.strictEqual(evt2.returnValue, '', 'Should set returnValue');
 });
 
 // ----------------------------------------------------------------------------
