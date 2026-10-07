@@ -1753,6 +1753,10 @@
       }
     });
 
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+
     updateTopBar();
   }
 
@@ -1859,7 +1863,7 @@
   }
 
   // Source audition buttons
-  $('#btn-source-a').addEventListener('click', () => {
+  $('#btn-source-a').addEventListener('click', (e) => {
     if (typeof ScientificAudioEngine !== 'undefined') {
       try {
         ScientificAudioEngine.playSource('A');
@@ -1867,8 +1871,11 @@
         console.warn('Error auditioning Source A:', err);
       }
     }
+    if (e && e.currentTarget && typeof e.currentTarget.blur === 'function') {
+      e.currentTarget.blur();
+    }
   });
-  $('#btn-source-x').addEventListener('click', () => {
+  $('#btn-source-x').addEventListener('click', (e) => {
     if (typeof ScientificAudioEngine !== 'undefined') {
       try {
         ScientificAudioEngine.playSource('X');
@@ -1876,14 +1883,20 @@
         console.warn('Error auditioning Source X:', err);
       }
     }
+    if (e && e.currentTarget && typeof e.currentTarget.blur === 'function') {
+      e.currentTarget.blur();
+    }
   });
-  $('#btn-source-b').addEventListener('click', () => {
+  $('#btn-source-b').addEventListener('click', (e) => {
     if (typeof ScientificAudioEngine !== 'undefined') {
       try {
         ScientificAudioEngine.playSource('B');
       } catch (err) {
         console.warn('Error auditioning Source B:', err);
       }
+    }
+    if (e && e.currentTarget && typeof e.currentTarget.blur === 'function') {
+      e.currentTarget.blur();
     }
   });
 
@@ -1967,8 +1980,18 @@
     }
   }
 
-  $('#btn-choose-a').addEventListener('click', () => setScientificChoice('A'));
-  $('#btn-choose-b').addEventListener('click', () => setScientificChoice('B'));
+  $('#btn-choose-a').addEventListener('click', (e) => {
+    setScientificChoice('A');
+    if (e && e.currentTarget && typeof e.currentTarget.blur === 'function') {
+      e.currentTarget.blur();
+    }
+  });
+  $('#btn-choose-b').addEventListener('click', (e) => {
+    setScientificChoice('B');
+    if (e && e.currentTarget && typeof e.currentTarget.blur === 'function') {
+      e.currentTarget.blur();
+    }
+  });
 
   // Commit / Advance
   async function commitScientificTrial() {
@@ -2047,18 +2070,28 @@
     if (k === 'a') {
       e.preventDefault();
       if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('A');
+      const btn = $('#btn-source-a');
+      if (btn && typeof btn.focus === 'function') btn.focus();
     } else if (k === 'x') {
       e.preventDefault();
       if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('X');
+      const btn = $('#btn-source-x');
+      if (btn && typeof btn.focus === 'function') btn.focus();
     } else if (k === 'b') {
       e.preventDefault();
       if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('B');
+      const btn = $('#btn-source-b');
+      if (btn && typeof btn.focus === 'function') btn.focus();
     } else if (e.key === '1') {
       e.preventDefault();
       setScientificChoice('A');
+      const btn = $('#btn-choose-a');
+      if (btn && typeof btn.focus === 'function') btn.focus();
     } else if (e.key === '2') {
       e.preventDefault();
       setScientificChoice('B');
+      const btn = $('#btn-choose-b');
+      if (btn && typeof btn.focus === 'function') btn.focus();
     } else if (e.key === 'Enter') {
       e.preventDefault();
       commitScientificTrial();

@@ -268,6 +268,10 @@ test('style.css exists, contains modernized tokens and has no !important on .btn
   assert(css.includes('--accent: #D94826'), 'style.css must declare calm orange accent #D94826');
   assert(css.includes('[data-theme="dark"]'), 'style.css must support dark mode via [data-theme="dark"]');
   assert(css.includes('@media (prefers-color-scheme: dark)'), 'style.css must support system dark mode preference');
+  assert(css.includes('--focus-ring:'), 'style.css must declare --focus-ring to decouple focus from active accent');
+  assert(!css.includes(':focus-visible { outline: 2px solid var(--accent)'), ':focus-visible must not use var(--accent)');
+  assert(css.includes('.source-btn:focus-visible'), 'style.css must explicitly style .source-btn:focus-visible');
+  assert(css.includes('.choose-btn:focus-visible'), 'style.css must explicitly style .choose-btn:focus-visible');
 });
 
 // Extract inline script from index.html (select the main application script)
@@ -286,6 +290,11 @@ test('index.html inline script compiles cleanly in Node VM', () => {
   assert.doesNotThrow(() => {
     new vm.Script(inlineScriptCode, { filename: 'index-inline.js' });
   });
+});
+
+test('keyboard shortcuts synchronize focus and click handlers blur source buttons', () => {
+  assert(inlineScriptCode.includes("$('#btn-source-a')") && inlineScriptCode.includes("btn.focus()"), 'Keydown shortcuts must transfer focus to the activated button');
+  assert(inlineScriptCode.includes("currentTarget.blur()"), 'Source and choice buttons must blur on mouse click to prevent stranded focus rings');
 });
 
 // ----------------------------------------------------------------------------
