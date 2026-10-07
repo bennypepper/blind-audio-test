@@ -103,7 +103,7 @@ test('index.html includes all 6 core Single Page Application views', () => {
   });
 });
 
-test('index.html top bar contains brand, mode badge, progress bar, reshuffle, and switch mode', () => {
+test('index.html top bar contains brand, mode badge, progress bar, reshuffle, switch mode, and theme toggle', () => {
   const navElements = [
     'id="brand-home"',
     'id="mode-badge"',
@@ -112,7 +112,8 @@ test('index.html top bar contains brand, mode badge, progress bar, reshuffle, an
     'id="progress-text"',
     'id="btn-top-hotkeys"',
     'id="reshuffle"',
-    'id="btn-switch-mode"'
+    'id="btn-switch-mode"',
+    'id="btn-theme-toggle"'
   ];
   navElements.forEach(id => {
     assert(indexHTML.includes(id), `Top navigation bar must contain element with ${id}`);
@@ -257,17 +258,19 @@ test('style.css exists, contains modernized tokens and has no !important on .btn
   assert(css.includes('--font-mono'), 'style.css must declare --font-mono for tabular timing');
   assert(css.includes('--audition'), 'style.css must declare --audition for active channel');
   assert(!css.includes('.btn-accent { background: var(--accent) !important'), '.btn-accent must not have !important overriding disabled state');
+  assert(css.includes('--accent: #D94826'), 'style.css must declare calm orange accent #D94826');
+  assert(css.includes('[data-theme="dark"]'), 'style.css must support dark mode via [data-theme="dark"]');
+  assert(css.includes('@media (prefers-color-scheme: dark)'), 'style.css must support system dark mode preference');
 });
 
-// Extract inline script from index.html
+// Extract inline script from index.html (select the main application script)
 const scriptRegex = /<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
 let scriptMatch;
 let inlineScriptCode = '';
 while ((scriptMatch = scriptRegex.exec(indexHTML)) !== null) {
   const content = scriptMatch[1].trim();
-  if (content.length > 0) {
+  if (content.length > inlineScriptCode.length) {
     inlineScriptCode = content;
-    break;
   }
 }
 
@@ -421,10 +424,19 @@ function createMockEnvironment() {
     'sci-track-tbody', 'sci-bias-text',
     'btn-download-audit', 'btn-copy-markdown', 'btn-retake-scientific', 'btn-change-setup',
     'brand-home', 'dlg', 'dlg-switch-mode', 'dlg-instructions', 'dlg-switch-cancel', 'dlg-switch-ok',
-    'dlg-cancel', 'dlg-ok', 'dlg-text', 'dlg-inst-close', 'tips', 'tips-ok', 'live', 'qlist', 'results'
+    'dlg-cancel', 'dlg-ok', 'dlg-text', 'dlg-inst-close', 'tips', 'tips-ok', 'live', 'qlist', 'results',
+    'btn-theme-toggle'
   ];
 
   requiredIds.forEach(id => getOrCreate(id));
+
+  // Theme toggle child elements (icon-sun and icon-moon)
+  const themeToggle = getOrCreate('btn-theme-toggle', 'BUTTON');
+  const sunIcon = new MockElement('SVG');
+  sunIcon.classList.add('icon-sun');
+  const moonIcon = new MockElement('SVG');
+  moonIcon.classList.add('icon-moon');
+  themeToggle.children.push(sunIcon, moonIcon);
 
   // Gate child elements (gate-time and gate-status)
   ['a', 'x', 'b'].forEach(k => {
@@ -491,6 +503,7 @@ function createMockEnvironment() {
   });
 
   const mockDocument = {
+    documentElement: new MockElement('HTML'),
     body: new MockElement('BODY'),
     getElementById(id) { return domNodes.get(id) || null; },
     querySelector(selector) {
@@ -978,6 +991,29 @@ test('beforeunload listener guards against accidental navigation during active t
   }, 'beforeunload handler must not throw ReferenceError');
   assert.strictEqual(evt2.defaultPrevented, true, 'Should prevent unload when active trial has progress');
   assert.strictEqual(evt2.returnValue, '', 'Should set returnValue');
+});
+
+test('Theme toggle button dynamically switches data-theme attribute between light and dark', () => {
+  const mockEnv = createMockEnvironment();
+  const { mockWindow, mockDocument } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  const btnTheme = mockDocument.getElementById('btn-theme-toggle');
+  assert(btnTheme, '#btn-theme-toggle must be present in DOM');
+
+  // Default starts as light (matchMedia is false and no localStorage)
+  assert.strictEqual(mockDocument.documentElement.getAttribute('data-theme'), 'light', 'Theme should default to light');
+
+  // First click: light -> dark
+  btnTheme.click();
+  assert.strictEqual(mockDocument.documentElement.getAttribute('data-theme'), 'dark', 'Theme should toggle to dark on click');
+
+  // Second click: dark -> light
+  btnTheme.click();
+  assert.strictEqual(mockDocument.documentElement.getAttribute('data-theme'), 'light', 'Theme should toggle back to light on second click');
 });
 
 // ----------------------------------------------------------------------------
