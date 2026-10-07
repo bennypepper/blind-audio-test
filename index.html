@@ -64,42 +64,188 @@
 <div id="view-mode-select" class="page view">
   <div class="portal-hero">
     <h1>Two ways to test your critical hearing.</h1>
-    <p class="lede">Evaluate your acoustic acuity and playback equipment. Choose between our casual streaming tier challenge or the rigorous, double-blind scientific ABX testing protocol.</p>
+    <p class="lede">Select an evaluation protocol to test your playback equipment and acoustic acuity. Choose between a rapid multi-tier streaming challenge or a double-blind scientific ABX testing session.</p>
   </div>
-  <div class="mode-cards">
-    <!-- Card 1: Standard Mode -->
-    <div class="mode-card">
-      <div>
-        <span class="mode-tag standard">Casual / Streaming Challenge</span>
-        <h2>Standard Mode</h2>
-        <p class="mode-desc">A 4-choice blind evaluation across 8 acoustic stress-test genres. Compare CD lossless master against simulated streaming tiers (Apple AAC 256k, YouTube Opus 128k, Standard MP3 128k) with instant feedback after every song.</p>
-        <ul class="mode-features">
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 8 curated acoustic categories (vocals, piano, drums, EDM, etc.)</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 4-choice MUSHRA format (25% chance guessing baseline)</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Immediate reveal &amp; feedback after each song</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Fast 5&ndash;10 minute listening session</li>
-        </ul>
+
+  <!-- Segmented Methodology Switcher -->
+  <div class="bench-switcher" role="tablist" aria-label="Acoustic Evaluation Methodology">
+    <button class="bench-tab active" role="tab" id="tab-bench-standard" aria-selected="true" aria-controls="panel-bench-standard">
+      <span class="bench-tab-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="10" width="3" height="4" rx="1"/><rect x="8" y="6" width="3" height="12" rx="1"/><rect x="13" y="3" width="3" height="18" rx="1"/><rect x="18" y="8" width="3" height="8" rx="1"/></svg>
+        Standard Listening Challenge
+      </span>
+      <span class="bench-tab-sub">4-Choice MUSHRA-Style Benchmark</span>
+    </button>
+    <button class="bench-tab" role="tab" id="tab-bench-scientific" aria-selected="false" aria-controls="panel-bench-scientific">
+      <span class="bench-tab-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
+        Scientific ABX Protocol
+      </span>
+      <span class="bench-tab-sub">Double-Blind 2-Alternative Forced Choice (2AFC)</span>
+    </button>
+  </div>
+
+  <!-- Unified Test Bench Console -->
+  <div class="bench-console" role="region" aria-label="Test Bench Configuration">
+    <!-- Panel 1: Standard Mode -->
+    <div id="panel-bench-standard" class="bench-panel" role="tabpanel" aria-labelledby="tab-bench-standard">
+      <div class="bench-header">
+        <div class="bench-header-title">
+          <span>Test Bench Configuration</span>
+          <span style="opacity: 0.4;">/</span>
+          <span>Standard Protocol</span>
+        </div>
+        <span class="bench-status-pill">Ready to Initialize</span>
       </div>
-      <div class="mode-card-footer">
-        <button class="btn btn-primary btn-lg" id="btn-launch-standard">Launch Standard Mode</button>
+
+      <div class="bench-body">
+        <div class="signal-chain">
+          <div class="signal-chain-label">Signal Architecture &amp; Playhead Flow</div>
+          <div class="signal-flow">
+            <span class="signal-node highlight">Master: CD 16/44.1 FLAC</span>
+            <span class="signal-arrow">&rarr;</span>
+            <span class="signal-node">4 Stream Matrix (FLAC &middot; AAC &middot; Opus &middot; MP3)</span>
+            <span class="signal-arrow">&rarr;</span>
+            <span class="signal-node">Sample-Accurate Playhead Sync</span>
+            <span class="signal-arrow">&rarr;</span>
+            <span class="signal-node">Instant Reveal &amp; Ranking</span>
+          </div>
+        </div>
+
+        <table class="bench-spec-table">
+          <tbody>
+            <tr>
+              <th scope="row">Methodological Format</th>
+              <td>4-Alternative Forced Choice (MUSHRA-style multi-tier evaluation)</td>
+            </tr>
+            <tr>
+              <th scope="row">Random Chance Baseline (H₀)</th>
+              <td><span class="mono-spec">25.0%</span> random guessing baseline</td>
+            </tr>
+            <tr>
+              <th scope="row">Reference Master</th>
+              <td><span class="mono-spec">16-bit / 44.1 kHz Redbook FLAC (Lossless)</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Simulated Encoders</th>
+              <td><span class="mono-spec">Apple AAC 256k &middot; YouTube Opus 128k &middot; MP3 128k</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Test Battery</th>
+              <td>8 Curated acoustic stress-test genres (vocals, piano, orchestra, EDM, jazz...)</td>
+            </tr>
+            <tr>
+              <th scope="row">Trial Feedback</th>
+              <td>Immediate tier identification and score tally after each song</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="bench-advisory">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong>Acoustic Advisory:</strong> Wired over-ear headphones or calibrated monitors recommended. Disable EQ, volume normalizers, spatial audio, and OS-level enhancements for valid results.
+          </div>
+        </div>
+      </div>
+
+      <div class="bench-footer">
+        <div class="bench-meta">
+          <span class="bench-meta-item">Duration: <strong>~8&ndash;10 min</strong></span>
+          <span class="bench-meta-item">Battery: <strong>8 Tracks</strong></span>
+        </div>
+        <div class="bench-actions">
+          <button class="btn btn-primary btn-lg" id="btn-launch-standard">
+            <span>Initialize Standard Test</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Card 2: Scientific ABX -->
-    <div class="mode-card featured">
-      <div>
-        <span class="mode-tag scientific">Rigorous / Double-Blind</span>
-        <h2>Scientific ABX</h2>
-        <p class="mode-desc">Strict double-blind perceptual ABX methodology inspired by <code>abx.digitalfeed.net</code>. Pre-registered trials, gapless Web Audio switching, exact binomial statistics, Clopper&ndash;Pearson 95% confidence intervals, and Holm&ndash;Bonferroni corrections.</p>
-        <ul class="mode-features">
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> CD 16/44.1 FLAC vs chosen codec (AAC 256, Opus 128, MP3 128)</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hardware CSPRNG double-blind secret target randomization</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 2.0s per-source audition gate &amp; gapless 10ms micro-crossfade</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Exact p-values, Clopper&ndash;Pearson 95% CI &amp; JSON audit log</li>
-        </ul>
+    <!-- Panel 2: Scientific ABX Mode -->
+    <div id="panel-bench-scientific" class="bench-panel" role="tabpanel" aria-labelledby="tab-bench-scientific" style="display: none;">
+      <div class="bench-header">
+        <div class="bench-header-title">
+          <span>Test Bench Configuration</span>
+          <span style="opacity: 0.4;">/</span>
+          <span>Scientific ABX Protocol</span>
+        </div>
+        <span class="bench-status-pill">Ready to Configure</span>
       </div>
-      <div class="mode-card-footer">
-        <button class="btn btn-primary btn-lg btn-accent" id="btn-launch-scientific">Launch Scientific ABX</button>
+
+      <div class="bench-body">
+        <div class="signal-chain">
+          <div class="signal-chain-label">Signal Architecture &amp; Blinding Flow</div>
+          <div class="signal-flow">
+            <span class="signal-node highlight">Master: CD 16/44.1 FLAC</span>
+            <span class="signal-arrow">+</span>
+            <span class="signal-node">Encoder Under Test</span>
+            <span class="signal-arrow">&rarr;</span>
+            <span class="signal-node">Hardware CSPRNG Blinding</span>
+            <span class="signal-arrow">&rarr;</span>
+            <span class="signal-node">Synchronous A/X/B Gate (&ge; 2.0s)</span>
+            <span class="signal-arrow">&rarr;</span>
+            <span class="signal-node">Clopper&ndash;Pearson 95% CI</span>
+          </div>
+        </div>
+
+        <table class="bench-spec-table">
+          <tbody>
+            <tr>
+              <th scope="row">Methodological Format</th>
+              <td>Double-Blind 2-Alternative Forced Choice (2AFC perceptual ABX)</td>
+            </tr>
+            <tr>
+              <th scope="row">Null Hypothesis Rate (H₀)</th>
+              <td><span class="mono-spec">50.0%</span> coin-flip baseline chance</td>
+            </tr>
+            <tr>
+              <th scope="row">Reference Master</th>
+              <td><span class="mono-spec">16-bit / 44.1 kHz Redbook FLAC (Lossless)</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Comparison Target</th>
+              <td>Selected encoder under test (<span class="mono-spec">AAC 256k</span>, <span class="mono-spec">Opus 128k</span>, or <span class="mono-spec">MP3 128k</span>)</td>
+            </tr>
+            <tr>
+              <th scope="row">Blinding Security</th>
+              <td>Hardware CSPRNG (<span class="mono-spec">Web Crypto API</span>) secret assignment encapsulated from DOM</td>
+            </tr>
+            <tr>
+              <th scope="row">Switching &amp; Crossfade</th>
+              <td><span class="mono-spec">10ms</span> equal-power micro-crossfade with synchronous playhead lock</td>
+            </tr>
+            <tr>
+              <th scope="row">Audition Engagement Gate</th>
+              <td>Mandatory <span class="mono-spec">&ge; 2.0s</span> active listening on A, X, and B before choice unlocks</td>
+            </tr>
+            <tr>
+              <th scope="row">Statistical Inference</th>
+              <td>Exact binomial upper-tail <span class="mono-spec">p-value</span>, Clopper&ndash;Pearson <span class="mono-spec">95% CI</span>, Holm&ndash;Bonferroni correction</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="bench-advisory">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong>Laboratory Protocol:</strong> Pre-registration of trials prevents statistical cherry-picking. A 30-second auditory rest timer is enforced between tracks to reduce listening fatigue.
+          </div>
+        </div>
+      </div>
+
+      <div class="bench-footer">
+        <div class="bench-meta">
+          <span class="bench-meta-item">Battery: <strong>5 or 8 Tracks</strong></span>
+          <span class="bench-meta-item">Trials: <strong>5, 10, or 20 per track</strong></span>
+        </div>
+        <div class="bench-actions">
+          <button class="btn btn-primary btn-lg" id="btn-launch-scientific">
+            <span>Configure ABX Battery</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -811,6 +957,33 @@
     }
     switchView(VIEWS.MODE_SELECT);
   });
+
+  /* ==========================================================================
+     BENCH CONSOLE PROTOCOL SWITCHER
+     ========================================================================== */
+  const tabBenchStandard = $('#tab-bench-standard');
+  const tabBenchScientific = $('#tab-bench-scientific');
+  const panelBenchStandard = $('#panel-bench-standard');
+  const panelBenchScientific = $('#panel-bench-scientific');
+
+  function setBenchProtocol(proto) {
+    const isStd = proto === 'standard';
+    if (tabBenchStandard && tabBenchScientific) {
+      tabBenchStandard.classList.toggle('active', isStd);
+      tabBenchStandard.setAttribute('aria-selected', isStd ? 'true' : 'false');
+      tabBenchScientific.classList.toggle('active', !isStd);
+      tabBenchScientific.setAttribute('aria-selected', !isStd ? 'true' : 'false');
+    }
+    if (panelBenchStandard && panelBenchScientific) {
+      panelBenchStandard.style.display = isStd ? 'block' : 'none';
+      panelBenchScientific.style.display = !isStd ? 'block' : 'none';
+    }
+  }
+
+  if (tabBenchStandard && tabBenchScientific) {
+    tabBenchStandard.addEventListener('click', () => setBenchProtocol('standard'));
+    tabBenchScientific.addEventListener('click', () => setBenchProtocol('scientific'));
+  }
 
   $('#btn-launch-standard').addEventListener('click', () => {
     switchView(VIEWS.STANDARD);

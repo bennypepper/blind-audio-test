@@ -120,9 +120,16 @@ test('index.html top bar contains brand, mode badge, progress bar, reshuffle, sw
   });
 });
 
-test('index.html Mode Select portal contains Standard and Scientific launch buttons', () => {
+test('index.html Mode Select portal contains Unified Test Bench Console with segmented tabs and spec tables', () => {
   assert(indexHTML.includes('id="btn-launch-standard"'), 'Must have #btn-launch-standard');
   assert(indexHTML.includes('id="btn-launch-scientific"'), 'Must have #btn-launch-scientific');
+  assert(indexHTML.includes('id="tab-bench-standard"'), 'Must have #tab-bench-standard');
+  assert(indexHTML.includes('id="tab-bench-scientific"'), 'Must have #tab-bench-scientific');
+  assert(indexHTML.includes('id="panel-bench-standard"'), 'Must have #panel-bench-standard');
+  assert(indexHTML.includes('id="panel-bench-scientific"'), 'Must have #panel-bench-scientific');
+  assert(indexHTML.includes('class="signal-chain"'), 'Must have signal architecture chain');
+  assert(indexHTML.includes('class="bench-spec-table"'), 'Must have technical spec table');
+  assert(indexHTML.includes('class="bench-advisory"'), 'Must have pre-flight advisory box');
 });
 
 test('index.html Scientific Setup contains comparisons, batteries, presets, and stats box', () => {
@@ -425,7 +432,8 @@ function createMockEnvironment() {
     'btn-download-audit', 'btn-copy-markdown', 'btn-retake-scientific', 'btn-change-setup',
     'brand-home', 'dlg', 'dlg-switch-mode', 'dlg-instructions', 'dlg-switch-cancel', 'dlg-switch-ok',
     'dlg-cancel', 'dlg-ok', 'dlg-text', 'dlg-inst-close', 'tips', 'tips-ok', 'live', 'qlist', 'results',
-    'btn-theme-toggle'
+    'btn-theme-toggle',
+    'tab-bench-standard', 'tab-bench-scientific', 'panel-bench-standard', 'panel-bench-scientific'
   ];
 
   requiredIds.forEach(id => getOrCreate(id));
@@ -1014,6 +1022,35 @@ test('Theme toggle button dynamically switches data-theme attribute between ligh
   // Second click: dark -> light
   btnTheme.click();
   assert.strictEqual(mockDocument.documentElement.getAttribute('data-theme'), 'light', 'Theme should toggle back to light on second click');
+});
+
+test('Bench console segmented switcher toggles between standard and scientific panels', () => {
+  const mockEnv = createMockEnvironment();
+  const sandbox = createSandbox(mockEnv);
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  const tabStd = mockEnv.mockDocument.getElementById('tab-bench-standard');
+  const tabSci = mockEnv.mockDocument.getElementById('tab-bench-scientific');
+  const panelStd = mockEnv.mockDocument.getElementById('panel-bench-standard');
+  const panelSci = mockEnv.mockDocument.getElementById('panel-bench-scientific');
+
+  assert(tabStd && tabSci && panelStd && panelSci, 'Bench switcher elements must exist');
+
+  // Click Scientific tab
+  tabSci.click();
+  assert(tabSci.classList.contains('active'), 'Scientific tab should be active');
+  assert(!tabStd.classList.contains('active'), 'Standard tab should not be active');
+  assert.strictEqual(panelSci.style.display, 'block', 'Scientific panel should be displayed');
+  assert.strictEqual(panelStd.style.display, 'none', 'Standard panel should be hidden');
+
+  // Click Standard tab
+  tabStd.click();
+  assert(tabStd.classList.contains('active'), 'Standard tab should be active');
+  assert(!tabSci.classList.contains('active'), 'Scientific tab should not be active');
+  assert.strictEqual(panelStd.style.display, 'block', 'Standard panel should be displayed');
+  assert.strictEqual(panelSci.style.display, 'none', 'Scientific panel should be hidden');
 });
 
 // ----------------------------------------------------------------------------

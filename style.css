@@ -353,56 +353,285 @@
   .dialog-scroll-body p { margin-top: 6px; color: var(--ink); font-size: 14px; line-height: 1.45; }
 
   /* ==========================================================================
-     MODE SELECTION PORTAL (#view-mode-select)
+     MODE SELECTION PORTAL (#view-mode-select) — UNIFIED INSTRUMENT CONSOLE
      ========================================================================== */
-  .portal-hero { text-align: center; margin-bottom: 36px; }
-  .portal-hero h1 { font-size: clamp(30px, 4.5vw, 44px); }
-  .portal-hero .lede { margin: 12px auto 0; }
-
-  .mode-cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-    margin-top: 24px;
+  .portal-hero {
+    text-align: center;
+    margin-bottom: 28px;
   }
-  .mode-card {
+  .portal-hero h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+  .portal-hero .lede {
+    margin: 10px auto 0;
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* Segmented Methodology Switcher */
+  .bench-switcher {
+    display: flex;
+    max-width: 760px;
+    margin: 0 auto 24px;
+    background: var(--soft);
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    gap: 6px;
+  }
+  .bench-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .bench-tab:hover {
+    color: var(--ink);
+    background: rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="dark"] .bench-tab:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .bench-tab.active {
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 600;
+    border-color: var(--line);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  [data-theme="dark"] .bench-tab.active {
+    border-color: var(--line-strong);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+  .bench-tab-title {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bench-tab.active .bench-tab-title {
+    color: var(--ink);
+  }
+  .bench-tab-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* Console Panel */
+  .bench-console {
+    max-width: 840px;
+    margin: 0 auto;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-panel);
-    padding: 32px 28px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  }
+  [data-theme="dark"] .bench-console {
+    box-shadow: none;
+    border-color: var(--line-strong);
+  }
+  .bench-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: space-between;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    padding: 16px 24px;
+    background: var(--soft);
+    border-bottom: 1px solid var(--line);
   }
-  .mode-card:hover {
-    box-shadow: var(--card-hover-shadow);
-    transform: translateY(-2px);
-    border-color: var(--line-strong);
+  .bench-header-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .mode-card.featured {
-    border-color: var(--line-strong);
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-  }
-  .mode-tag {
-    display: inline-block;
+  .bench-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
+    font-weight: 600;
+    color: var(--good);
+    background: var(--good-soft);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .bench-status-pill::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--good);
+  }
+  .bench-body {
+    padding: 26px 28px;
+  }
+
+  /* Signal Architecture Chain */
+  .signal-chain {
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+  .signal-chain-label {
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin-bottom: 14px;
+    color: var(--muted);
+    margin-bottom: 10px;
   }
-  .mode-tag.standard { background: var(--soft); color: var(--muted); }
-  .mode-tag.scientific { background: var(--accent-soft); color: var(--accent); }
-  .mode-card h2 { font-size: 24px; margin-bottom: 10px; }
-  .mode-desc { color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
-  .mode-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-  .mode-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink); }
-  .mode-features svg { color: var(--good); flex: none; margin-top: 3px; }
-  .mode-card-footer { margin-top: auto; }
-  .mode-card-footer .btn { width: 100%; }
+  .signal-flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  .signal-node {
+    padding: 6px 11px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .signal-node.highlight {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 600;
+  }
+  .signal-arrow {
+    color: var(--muted);
+    user-select: none;
+    font-weight: 700;
+  }
+
+  /* Technical Specifications Table */
+  .bench-spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 22px;
+    font-size: 14px;
+  }
+  .bench-spec-table th,
+  .bench-spec-table td {
+    padding: 11px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  .bench-spec-table tr:last-child th,
+  .bench-spec-table tr:last-child td {
+    border-bottom: none;
+  }
+  .bench-spec-table th {
+    width: 32%;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .bench-spec-table td {
+    color: var(--ink);
+    font-family: var(--font);
+    line-height: 1.45;
+  }
+  .bench-spec-table td .mono-spec {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    display: inline-block;
+  }
+
+  /* Pre-Flight Advisory Box */
+  .bench-advisory {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .bench-advisory strong {
+    color: var(--ink);
+  }
+  .bench-advisory svg {
+    color: var(--accent);
+    flex: none;
+    margin-top: 1px;
+  }
+
+  /* Bench Console Footer */
+  .bench-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    background: var(--soft);
+    border-top: 1px solid var(--line);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .bench-meta {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .bench-meta-item strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .bench-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bench-actions .btn {
+    min-width: 220px;
+  }
+  @media (max-width: 640px) {
+    .bench-switcher { flex-direction: column; }
+    .bench-tab { padding: 10px 14px; }
+    .bench-spec-table th { width: 38%; }
+    .bench-footer { flex-direction: column; align-items: stretch; }
+    .bench-actions .btn { width: 100%; min-width: 0; }
+  }
 
   /* ==========================================================================
      SCIENTIFIC SETUP VIEW (#view-scientific-setup)
