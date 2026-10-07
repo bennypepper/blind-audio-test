@@ -1680,6 +1680,17 @@
       if (typeof ScientificAudioEngine !== 'undefined') {
         ScientificAudioEngine.stop();
       }
+      if (sciPlayheadInterval) {
+        clearInterval(sciPlayheadInterval);
+        sciPlayheadInterval = null;
+      }
+    }
+    // Clear rest countdown if leaving rest view
+    if (currentView === VIEWS.SCI_REST && targetView !== VIEWS.SCI_REST) {
+      if (restCountdownInterval) {
+        clearInterval(restCountdownInterval);
+        restCountdownInterval = null;
+      }
     }
 
     Object.values(VIEWS).forEach(vId => {
@@ -2781,6 +2792,13 @@
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(5);
+    }
+  });
+
+  window.addEventListener('beforeunload', e => {
+    if ((currentView === VIEWS.SCI_TRIAL || currentView === VIEWS.SCI_REST) && sciSession && sciSession.results.length > 0) {
+      e.preventDefault();
+      e.returnValue = '';
     }
   });
 
