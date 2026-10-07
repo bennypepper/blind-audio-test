@@ -74,14 +74,14 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="10" width="3" height="4" rx="1"/><rect x="8" y="6" width="3" height="12" rx="1"/><rect x="13" y="3" width="3" height="18" rx="1"/><rect x="18" y="8" width="3" height="8" rx="1"/></svg>
         Standard Listening Challenge
       </span>
-      <span class="bench-tab-sub">4-Choice MUSHRA-Style Benchmark</span>
+      <span class="bench-tab-sub">4-Choice MUSHRA Benchmark</span>
     </button>
     <button class="bench-tab" role="tab" id="tab-bench-scientific" aria-selected="false" aria-controls="panel-bench-scientific">
       <span class="bench-tab-title">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31M14 2v7.31M8.5 2h7M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
         Scientific ABX Protocol
       </span>
-      <span class="bench-tab-sub">Double-Blind 2-Alternative Forced Choice (2AFC)</span>
+      <span class="bench-tab-sub">Double-Blind 2AFC Benchmark</span>
     </button>
   </div>
 
@@ -183,14 +183,12 @@
           <div class="signal-chain-label">Signal Architecture &amp; Blinding Flow</div>
           <div class="signal-flow">
             <span class="signal-node highlight">Master: CD 16/44.1 FLAC</span>
-            <span class="signal-arrow">+</span>
-            <span class="signal-node">Encoder Under Test</span>
             <span class="signal-arrow">&rarr;</span>
-            <span class="signal-node">Hardware CSPRNG Blinding</span>
+            <span class="signal-node">Comparison Target (AAC &middot; Opus &middot; MP3)</span>
             <span class="signal-arrow">&rarr;</span>
-            <span class="signal-node">Synchronous A/X/B Gate (&ge; 2.0s)</span>
+            <span class="signal-node">Hardware CSPRNG Blinding &amp; Gate</span>
             <span class="signal-arrow">&rarr;</span>
-            <span class="signal-node">Clopper&ndash;Pearson 95% CI</span>
+            <span class="signal-node">Clopper&ndash;Pearson 95% CI Verdict</span>
           </div>
         </div>
 
@@ -212,16 +210,16 @@
             <span class="spec-val">Configurable: <span class="mono-spec">AAC 256k</span>, <span class="mono-spec">Opus 128k</span>, <span class="mono-spec">MP3 128k</span></span>
           </div>
           <div class="spec-item">
-            <span class="spec-label">Blinding Security</span>
-            <span class="spec-val">Hardware CSPRNG (<span class="mono-spec">Web Crypto API</span>) encapsulated</span>
+            <span class="spec-label">Test Battery</span>
+            <span class="spec-val">5 or 8 Curated acoustic stress genres</span>
           </div>
           <div class="spec-item">
-            <span class="spec-label">Audition Gate</span>
-            <span class="spec-val">Mandatory <span class="mono-spec">&ge; 2.0s</span> listening on A, X, and B</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Switching &amp; Crossfade</span>
+            <span class="spec-label">Playhead Switching</span>
             <span class="spec-val"><span class="mono-spec">10ms</span> micro-crossfade with playhead sync</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Blinding &amp; Audition Gate</span>
+            <span class="spec-val">CSPRNG encapsulated &middot; Mandatory <span class="mono-spec">&ge; 2.0s</span> gate</span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Statistical Inference</span>
@@ -237,12 +235,12 @@
 
       <div class="bench-footer">
         <div class="bench-meta">
-          <span class="bench-meta-item">Battery: <strong>5 or 8 Tracks</strong></span>
-          <span class="bench-meta-item">Trials: <strong>5, 10, or 20 per track</strong></span>
+          <span class="bench-meta-item">Duration: <strong>~10&ndash;25 min</strong></span>
+          <span class="bench-meta-item">Battery: <strong>5 or 8 Tracks (5&ndash;20 trials)</strong></span>
         </div>
         <div class="bench-actions">
           <button class="btn btn-primary btn-lg" id="btn-launch-scientific">
-            <span>Configure ABX Battery</span>
+            <span>Configure Scientific ABX</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
