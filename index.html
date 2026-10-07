@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="tracks-catalog.js"></script>
 <script src="scientific-stats.js"></script>
 <script src="scientific-audio.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -467,12 +468,12 @@
 
     <!-- Key Metrics Grid -->
     <div class="results-stats-grid">
-      <div class="r-metric-card">
+      <div class="r-metric-card r-metric-hero">
         <span class="r-metric-label">Overall Score</span>
         <span class="r-metric-val" id="res-score">32 / 50</span>
         <span class="r-metric-sub" id="res-score-pct">64.0% correct</span>
       </div>
-      <div class="r-metric-card">
+      <div class="r-metric-card r-metric-hero">
         <span class="r-metric-label">Exact Binomial p-value</span>
         <span class="r-metric-val" id="res-p">p = 0.0325</span>
         <span class="r-metric-sub" id="res-p-sub">Threshold: &alpha; &le; 0.05</span>
@@ -522,16 +523,16 @@
 
     <!-- Actions -->
     <div class="results-action-row">
-      <button class="btn btn-primary btn-lg" id="btn-download-audit">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download Audit Log (JSON)
-      </button>
+      <button class="btn btn-primary btn-lg" id="btn-retake-scientific">Retake Test</button>
+      <button class="btn btn-quiet btn-lg" id="btn-change-setup">Change Setup</button>
       <button class="btn btn-quiet btn-lg" id="btn-copy-markdown">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         Copy Markdown Report
       </button>
-      <button class="btn btn-quiet btn-lg" id="btn-retake-scientific">Retake Test</button>
-      <button class="btn btn-quiet btn-lg" id="btn-change-setup">Change Setup</button>
+      <button class="btn btn-quiet btn-lg" id="btn-download-audit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Audit Log (JSON)
+      </button>
     </div>
   </div>
 </div>
@@ -591,281 +592,10 @@
 </dialog>
 
 <script>
-  /* Data */
-  const CODECS = {
-    flac:    { name: 'FLAC',          service: 'Lossless Master', kbps: 700, label: '~700 kbps' },
-    aac256:  { name: 'AAC 256 kbps',  service: 'Apple Music',     kbps: 256, label: '256 kbps' },
-    opus128: { name: 'Opus 128 kbps', service: 'YouTube Music',   kbps: 128, label: '128 kbps' },
-    mp3128:  { name: 'MP3 128 kbps',  service: 'Standard MP3',    kbps: 128, label: '128 kbps' }
-  };
-  const KEYS = ['flac', 'aac256', 'opus128', 'mp3128'];
-
-  const SONG_CATEGORIES = [
-    {
-      category: "Intimate Solo Vocal",
-      contenders: [
-        {
-          id: 1,
-          artist: "Adele",
-          title: "All I Ask",
-          cat: "Intimate Solo Vocal",
-          hint: "Vocal sibilance, breath micro-details, and room reverb decay on piano.",
-          cover: "covers/song1.jpg",
-          files: {
-            flac: "audio/song1_flac.flac",
-            aac256: "audio/song1_aac256.m4a",
-            opus128: "audio/song1_opus128.opus",
-            mp3128: "audio/song1_mp3128.mp3"
-          }
-        },
-        {
-          id: 9,
-          artist: "Hozier",
-          title: "Take Me to Church",
-          cat: "Intimate Solo Vocal",
-          hint: "Vocal dynamics, natural breathing, and ambient room reverberation on the backing choir.",
-          cover: "covers/song9.jpg",
-          files: {
-            flac: "audio/song9_flac.flac",
-            aac256: "audio/song9_aac256.m4a",
-            opus128: "audio/song9_opus128.opus",
-            mp3128: "audio/song9_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "Acoustic Grand Piano and Strings",
-      contenders: [
-        {
-          id: 2,
-          artist: "Teddy Swims",
-          title: "Lose Control (Piano Version)",
-          cat: "Acoustic Grand Piano and Strings",
-          hint: "Piano hammer attack transients, soundboard resonance, and sustained decay.",
-          cover: "covers/song2.jpg",
-          files: {
-            flac: "audio/song2_flac.flac",
-            aac256: "audio/song2_aac256.m4a",
-            opus128: "audio/song2_opus128.opus",
-            mp3128: "audio/song2_mp3128.mp3"
-          }
-        },
-        {
-          id: 10,
-          artist: "Hozier",
-          title: "Be (Acoustic)",
-          cat: "Acoustic Grand Piano and Strings",
-          hint: "Acoustic guitar pluck transients and warm natural room decay.",
-          cover: "covers/song10.jpg",
-          files: {
-            flac: "audio/song10_flac.flac",
-            aac256: "audio/song10_aac256.m4a",
-            opus128: "audio/song10_opus128.opus",
-            mp3128: "audio/song10_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "Complex Cymbals and Rock Drums",
-      contenders: [
-        {
-          id: 3,
-          artist: "Foo Fighters",
-          title: "The Pretender",
-          cat: "Complex Cymbals and Rock Drums",
-          hint: "Ride cymbal sizzle, crash overtones, and sharp snare transient decay.",
-          cover: "covers/song3.jpg",
-          files: {
-            flac: "audio/song3_flac.flac",
-            aac256: "audio/song3_aac256.m4a",
-            opus128: "audio/song3_opus128.opus",
-            mp3128: "audio/song3_mp3128.mp3"
-          }
-        },
-        {
-          id: 11,
-          artist: "Queen",
-          title: "Another One Bites the Dust",
-          cat: "Complex Cymbals and Rock Drums",
-          hint: "Crisp snare snap, hi-hat shimmer, and dry punchy bass transients.",
-          cover: "covers/song11.jpg",
-          files: {
-            flac: "audio/song11_flac.flac",
-            aac256: "audio/song11_aac256.m4a",
-            opus128: "audio/song11_opus128.opus",
-            mp3128: "audio/song11_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "EDM Sub-Bass and Stereo Synths",
-      contenders: [
-        {
-          id: 4,
-          artist: "Zedd ft. Foxes",
-          title: "Clarity",
-          cat: "EDM Sub-Bass and Stereo Synths",
-          hint: "Deep 40 Hz sub-bass drop, sidechain pumping, and wide stereo synth separation.",
-          cover: "covers/song4.jpg",
-          files: {
-            flac: "audio/song4_flac.flac",
-            aac256: "audio/song4_aac256.m4a",
-            opus128: "audio/song4_opus128.opus",
-            mp3128: "audio/song4_mp3128.mp3"
-          }
-        },
-        {
-          id: 12,
-          artist: "Alan Walker",
-          title: "Faded",
-          cat: "EDM Sub-Bass and Stereo Synths",
-          hint: "35 Hz sub-bass drop, wide stereophonic synths, and vocal reverb tails.",
-          cover: "covers/song12.jpg",
-          files: {
-            flac: "audio/song12_flac.flac",
-            aac256: "audio/song12_aac256.m4a",
-            opus128: "audio/song12_opus128.opus",
-            mp3128: "audio/song12_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "Funk Groove and Sharp Horns",
-      contenders: [
-        {
-          id: 5,
-          artist: "Bruno Mars",
-          title: "24K Magic",
-          cat: "Funk Groove and Sharp Horns",
-          hint: "Snappy slap bass transients, 80s drum machine crack, and bright horn fanfares.",
-          cover: "covers/song5.jpg",
-          files: {
-            flac: "audio/song5_flac.flac",
-            aac256: "audio/song5_aac256.m4a",
-            opus128: "audio/song5_opus128.opus",
-            mp3128: "audio/song5_mp3128.mp3"
-          }
-        },
-        {
-          id: 13,
-          artist: "Daft Punk",
-          title: "Get Lucky",
-          cat: "Funk Groove and Sharp Horns",
-          hint: "Nile Rodgers funk guitar strum transients and punchy disco bassline.",
-          cover: "covers/song13.jpg",
-          files: {
-            flac: "audio/song13_flac.flac",
-            aac256: "audio/song13_aac256.m4a",
-            opus128: "audio/song13_opus128.opus",
-            mp3128: "audio/song13_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "Modern Polished Pop",
-      contenders: [
-        {
-          id: 6,
-          artist: "Dua Lipa",
-          title: "Don't Start Now",
-          cat: "Modern Polished Pop",
-          hint: "Nu-disco bassline groove, crisp handclaps, and multi-tracked vocal layers.",
-          cover: "covers/song6.jpg",
-          files: {
-            flac: "audio/song6_flac.flac",
-            aac256: "audio/song6_aac256.m4a",
-            opus128: "audio/song6_opus128.opus",
-            mp3128: "audio/song6_mp3128.mp3"
-          }
-        },
-        {
-          id: 14,
-          artist: "Ariana Grande",
-          title: "7 rings",
-          cat: "Modern Polished Pop",
-          hint: "Deep 808 sub-bass, rapid trap hi-hat rolls, and close-mic airy vocal harmonies.",
-          cover: "covers/song14.jpg",
-          files: {
-            flac: "audio/song14_flac.flac",
-            aac256: "audio/song14_aac256.m4a",
-            opus128: "audio/song14_opus128.opus",
-            mp3128: "audio/song14_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "Symphony Orchestra and Chimes",
-      contenders: [
-        {
-          id: 7,
-          artist: "John Williams",
-          title: "Carol of the Bells",
-          cat: "Symphony Orchestra and Chimes",
-          hint: "High-frequency glockenspiel overtone decay and massed acoustic string sections.",
-          cover: "covers/song7.jpg",
-          files: {
-            flac: "audio/song7_flac.flac",
-            aac256: "audio/song7_aac256.m4a",
-            opus128: "audio/song7_opus128.opus",
-            mp3128: "audio/song7_mp3128.mp3"
-          }
-        },
-        {
-          id: 15,
-          artist: "Trans-Siberian Orchestra",
-          title: "Christmas Eve / Sarajevo 12/24",
-          cat: "Symphony Orchestra and Chimes",
-          hint: "Glockenspiel bell harmonics colliding with electric guitars and orchestral strings.",
-          cover: "covers/song15.jpg",
-          files: {
-            flac: "audio/song15_flac.flac",
-            aac256: "audio/song15_aac256.m4a",
-            opus128: "audio/song15_opus128.opus",
-            mp3128: "audio/song15_mp3128.mp3"
-          }
-        }
-      ]
-    },
-    {
-      category: "Hyper-Dense Fast J-Pop",
-      contenders: [
-        {
-          id: 8,
-          artist: "YOASOBI",
-          title: "Adventure",
-          cat: "Hyper-Dense Fast J-Pop",
-          hint: "Dense wall of sound: rapid piano arpeggios, fast electronic kick, and vocal stacks.",
-          cover: "covers/song8.jpg",
-          files: {
-            flac: "audio/song8_flac.flac",
-            aac256: "audio/song8_aac256.m4a",
-            opus128: "audio/song8_opus128.opus",
-            mp3128: "audio/song8_mp3128.mp3"
-          }
-        },
-        {
-          id: 16,
-          artist: "Mrs. GREEN APPLE",
-          title: "Soranji",
-          cat: "Hyper-Dense Fast J-Pop",
-          hint: "Dense wall of sound: soaring vocal vibrato over high-tempo orchestral rock arrangement.",
-          cover: "covers/song16.jpg",
-          files: {
-            flac: "audio/song16_flac.flac",
-            aac256: "audio/song16_aac256.m4a",
-            opus128: "audio/song16_opus128.opus",
-            mp3128: "audio/song16_mp3128.mp3"
-          }
-        }
-      ]
-    }
-  ];
+  /* Data (loaded from tracks-catalog.js) */
+  const CODECS = (typeof window !== 'undefined' && window.CODECS) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.CODECS : {});
+  const KEYS = (typeof window !== 'undefined' && window.KEYS) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.KEYS : ['flac', 'aac256', 'opus128', 'mp3128']);
+  const SONG_CATEGORIES = (typeof window !== 'undefined' && window.SONG_CATEGORIES) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.SONG_CATEGORIES : []);
 
   const I = {
     play:   '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>',

@@ -477,6 +477,7 @@
   .sci-player-panel { margin-bottom: 24px; }
   .sci-transport { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
   .transport-controls { display: flex; gap: 8px; }
+  .transport-controls .btn-sm { min-height: 44px; min-width: 44px; padding: 0 14px; }
 
   .sci-section-panel {
     background: transparent;
@@ -501,7 +502,7 @@
     background: var(--surface);
     border: 2px solid var(--line);
     border-radius: var(--r-row);
-    padding: 16px 12px;
+    padding: 14px 18px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -690,8 +691,17 @@
     gap: 4px;
   }
   .r-metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-  .r-metric-val { font-size: 20px; font-weight: 800; color: var(--ink); }
+  .r-metric-val { font-size: 20px; font-weight: 800; color: var(--ink); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
   .r-metric-sub { font-size: 13px; color: var(--muted); }
+  .r-metric-card.r-metric-hero {
+    border-color: var(--line-strong);
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  .r-metric-card.r-metric-hero .r-metric-val {
+    font-size: 24px;
+    color: var(--accent);
+  }
 
   .results-section {
     background: var(--surface);

@@ -214,7 +214,9 @@
           if (this.masterGain.gain && typeof this.masterGain.gain.setValueAtTime === 'function') {
             this.masterGain.gain.setValueAtTime(1.0, this.audioContext.currentTime);
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Could not initialize Web Audio master gain node:', e);
+        }
       }
 
       return this;
@@ -289,11 +291,11 @@
 
       // Clean up previous HTML5 audio elements if present
       if (this.htmlAudioA) {
-        try { this.htmlAudioA.pause(); this.htmlAudioA.src = ''; } catch (e) {}
+        try { this.htmlAudioA.pause(); this.htmlAudioA.src = ''; } catch (e) { /* audio element pause/src reset ignore */ }
         this.htmlAudioA = null;
       }
       if (this.htmlAudioB) {
-        try { this.htmlAudioB.pause(); this.htmlAudioB.src = ''; } catch (e) {}
+        try { this.htmlAudioB.pause(); this.htmlAudioB.src = ''; } catch (e) { /* audio element pause/src reset ignore */ }
         this.htmlAudioB = null;
       }
 
@@ -359,6 +361,17 @@
             }
           };
 
+          const handleAudioError = (e) => {
+            console.warn('HTML5 Audio element load error for source:', e);
+            if (!settled) {
+              settled = true;
+              this.duration = 30.0;
+              resolve({ duration: this.duration, error: e });
+            }
+          };
+
+          audioA.addEventListener('error', handleAudioError, { once: true });
+          audioB.addEventListener('error', handleAudioError, { once: true });
           audioA.addEventListener('loadedmetadata', checkReady, { once: true });
           audioB.addEventListener('loadedmetadata', checkReady, { once: true });
           audioA.addEventListener('canplaythrough', checkReady, { once: true });

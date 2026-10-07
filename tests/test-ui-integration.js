@@ -49,8 +49,13 @@ console.log('Running Scientific ABX Full UI Integration & E2E Test Suite...\n');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const INDEX_HTML_PATH = path.join(ROOT_DIR, 'index.html');
+const TRACKS_CATALOG_PATH = path.join(ROOT_DIR, 'tracks-catalog.js');
 const STATS_JS_PATH = path.join(ROOT_DIR, 'scientific-stats.js');
 const AUDIO_JS_PATH = path.join(ROOT_DIR, 'scientific-audio.js');
+
+const TracksCatalog = require(TRACKS_CATALOG_PATH);
+const ScientificStats = require(STATS_JS_PATH);
+const ScientificAudioEngine = require(AUDIO_JS_PATH);
 
 const indexHTML = fs.readFileSync(INDEX_HTML_PATH, 'utf8');
 
@@ -69,6 +74,10 @@ test('index.html includes externalized style.css stylesheet and script tags', ()
   assert(
     indexHTML.includes('<link rel="stylesheet" href="style.css">'),
     'index.html must link externalized style.css'
+  );
+  assert(
+    indexHTML.includes('<script src="tracks-catalog.js"></script>'),
+    'index.html must include <script src="tracks-catalog.js"></script>'
   );
   assert(
     indexHTML.includes('<script src="scientific-stats.js"></script>'),
@@ -231,6 +240,13 @@ test('scientific-audio.js compiles without syntax errors', () => {
   const code = fs.readFileSync(AUDIO_JS_PATH, 'utf8');
   assert.doesNotThrow(() => {
     new vm.Script(code, { filename: 'scientific-audio.js' });
+  });
+});
+
+test('tracks-catalog.js compiles without syntax errors', () => {
+  const code = fs.readFileSync(TRACKS_CATALOG_PATH, 'utf8');
+  assert.doesNotThrow(() => {
+    new vm.Script(code, { filename: 'tracks-catalog.js' });
   });
 });
 
@@ -594,34 +610,44 @@ function createMockEnvironment() {
     },
     setInterval: (fn) => 101,
     clearInterval: () => {},
-    setTimeout: (fn) => setTimeout(fn, 0)
+    setTimeout: (fn) => setTimeout(fn, 0),
+    ScientificStats,
+    ScientificAudioEngine,
+    TracksCatalog,
+    CODECS: TracksCatalog.CODECS,
+    KEYS: TracksCatalog.KEYS,
+    SONG_CATEGORIES: TracksCatalog.SONG_CATEGORIES
   };
 
   return { mockWindow, mockDocument, domNodes, allElements, eventListeners };
 }
 
-test('SPA state machine initializes landing view at view-mode-select', () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-
-  const ScientificStats = require(STATS_JS_PATH);
-  mockWindow.ScientificStats = ScientificStats;
-
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-  mockWindow.ScientificAudioEngine = ScientificAudioEngine;
-
-  const sandbox = {
+function createSandbox(mockEnv, overrides = {}) {
+  const { mockWindow, mockDocument } = mockEnv;
+  return {
     window: mockWindow,
     document: mockDocument,
     ScientificStats,
     ScientificAudioEngine,
+    TracksCatalog,
+    CODECS: TracksCatalog.CODECS,
+    KEYS: TracksCatalog.KEYS,
+    SONG_CATEGORIES: TracksCatalog.SONG_CATEGORIES,
     Audio: mockWindow.Audio,
     matchMedia: mockWindow.matchMedia,
     localStorage: mockWindow.localStorage,
     setInterval: mockWindow.setInterval,
     clearInterval: mockWindow.clearInterval,
     setTimeout: mockWindow.setTimeout,
-    console
+    console,
+    ...overrides
   };
+}
+
+test('SPA state machine initializes landing view at view-mode-select', () => {
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -635,23 +661,9 @@ test('SPA state machine initializes landing view at view-mode-select', () => {
 });
 
 test('Switching views updates DOM visibility and top bar state cleanly', () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
-    setInterval: mockWindow.setInterval,
-    clearInterval: mockWindow.clearInterval,
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -672,23 +684,9 @@ test('Switching views updates DOM visibility and top bar state cleanly', () => {
 });
 
 test('Pre-registration statistical box updates dynamically on preset change', () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
-    setInterval: mockWindow.setInterval,
-    clearInterval: mockWindow.clearInterval,
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -720,23 +718,9 @@ test('Pre-registration statistical box updates dynamically on preset change', ()
 });
 
 test('Trial workflow: engagement gate locks choices until threshold, unlocks at >= 2.0s', () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
-    setInterval: mockWindow.setInterval,
-    clearInterval: mockWindow.clearInterval,
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -792,23 +776,9 @@ test('Trial workflow: engagement gate locks choices until threshold, unlocks at 
 });
 
 await testAsync('Commit workflow: reveals target, appends trial record, and advances trial index', async () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
-    setInterval: mockWindow.setInterval,
-    clearInterval: mockWindow.clearInterval,
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -854,23 +824,12 @@ await testAsync('Commit workflow: reveals target, appends trial record, and adva
 });
 
 await testAsync('Track transition workflow: live animation loop and scrubber persist when continuing to Song 2 from Rest', async () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv, {
     setInterval: (fn) => 102,
-    clearInterval: () => {},
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+    clearInterval: () => {}
+  });
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -922,23 +881,9 @@ await testAsync('Track transition workflow: live animation loop and scrubber per
 });
 
 test('Full battery completion: renders results banner, Holm table, and response bias', () => {
-  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
-    setInterval: mockWindow.setInterval,
-    clearInterval: mockWindow.clearInterval,
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
@@ -1007,23 +952,9 @@ test('Full battery completion: renders results banner, Holm table, and response 
 });
 
 test('beforeunload listener guards against accidental navigation during active trial without sciSession ReferenceError', () => {
-  const { mockWindow, mockDocument } = createMockEnvironment();
-  const ScientificStats = require(STATS_JS_PATH);
-  const ScientificAudioEngine = require(AUDIO_JS_PATH);
-
-  const sandbox = {
-    window: mockWindow,
-    document: mockDocument,
-    ScientificStats,
-    ScientificAudioEngine,
-    Audio: mockWindow.Audio,
-    matchMedia: mockWindow.matchMedia,
-    localStorage: mockWindow.localStorage,
-    setInterval: mockWindow.setInterval,
-    clearInterval: mockWindow.clearInterval,
-    setTimeout: mockWindow.setTimeout,
-    console
-  };
+  const mockEnv = createMockEnvironment();
+  const { mockWindow } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
 
   vm.createContext(sandbox);
   vm.runInContext(inlineScriptCode, sandbox);
