@@ -131,11 +131,16 @@
       this.audioContext = options.audioContext || null;
       this.masterGain = null;
 
-      // Audio buffers
+      // Audio buffers (Web Audio mode)
       this.bufferA = null; // Reference (Lossless FLAC)
       this.bufferB = null; // Test (Lossy)
       this.duration = 0.0;
       this.bufferCache = new Map();
+
+      // HTML5 Audio elements (fallback mode for file:// or unsupported decoders)
+      this.htmlAudioA = null;
+      this.htmlAudioB = null;
+      this.mode = 'webaudio'; // 'webaudio' | 'html5'
 
       // Playback state
       this.isPlaying = false;
@@ -143,7 +148,7 @@
       this.playheadStartOffset = 0.0;
       this.playheadStartTime = 0.0;
 
-      // Active audio graph nodes
+      // Active audio graph nodes (Web Audio mode)
       this.currentSourceNode = null;
       this.currentGainNode = null;
 
@@ -162,6 +167,20 @@
     }
 
     /**
+     * Helper to get clock time in seconds across Web Audio clock and performance clock
+     * @private
+     */
+    _getClockTime() {
+      if (this.audioContext && typeof this.audioContext.currentTime === 'number') {
+        return this.audioContext.currentTime;
+      }
+      if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+        return performance.now() / 1000;
+      }
+      return Date.now() / 1000;
+    }
+
+    /**
      * Initializes or resumes the AudioContext and configures the master gain node.
      * @param {AudioContext} [customAudioContext] - Optional custom or mock AudioContext.
      * @returns {ScientificAudioEngine}
@@ -172,34 +191,43 @@
       } else if (!this.audioContext) {
         const AudioCtxClass = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
         if (AudioCtxClass) {
-          this.audioContext = new AudioCtxClass();
+          try {
+            this.audioContext = new AudioCtxClass();
+          } catch (e) {
+            this.audioContext = createHeadlessAudioContext();
+          }
         } else {
           this.audioContext = createHeadlessAudioContext();
         }
       }
 
       if (this.audioContext && this.audioContext.state === 'suspended' && typeof this.audioContext.resume === 'function') {
-        this.audioContext.resume();
+        this.audioContext.resume().catch(() => {});
       }
 
       if (this.audioContext && !this.masterGain) {
-        this.masterGain = this.audioContext.createGain();
-        if (this.masterGain.connect && this.audioContext.destination) {
-          this.masterGain.connect(this.audioContext.destination);
-        }
-        if (this.masterGain.gain && typeof this.masterGain.gain.setValueAtTime === 'function') {
-          this.masterGain.gain.setValueAtTime(1.0, this.audioContext.currentTime);
-        }
+        try {
+          this.masterGain = this.audioContext.createGain();
+          if (this.masterGain.connect && this.audioContext.destination) {
+            this.masterGain.connect(this.audioContext.destination);
+          }
+          if (this.masterGain.gain && typeof this.masterGain.gain.setValueAtTime === 'function') {
+            this.masterGain.gain.setValueAtTime(1.0, this.audioContext.currentTime);
+          }
+        } catch (e) {}
       }
 
       return this;
     }
 
     /**
-     * Checks whether both Reference and Target audio buffers are loaded in memory.
+     * Checks whether both Reference and Target audio sources are loaded in memory.
      * @returns {boolean}
      */
     isLoaded() {
+      if (this.mode === 'html5') {
+        return Boolean(this.htmlAudioA && this.htmlAudioB && this.duration > 0);
+      }
       return Boolean(this.bufferA && this.bufferB && this.duration > 0);
     }
 
@@ -244,7 +272,7 @@
     }
 
     /**
-     * Loads and decodes FLAC reference and Lossy target audio files into memory.
+     * Loads audio tracks using pre-decoded Web Audio buffers or resilient HTML5 Audio element fallback.
      * @param {string|AudioBuffer} flacSource - Lossless reference FLAC URL or AudioBuffer.
      * @param {string|AudioBuffer} lossySource - Lossy comparison format URL or AudioBuffer.
      * @returns {Promise<{ duration: number }>}
@@ -259,17 +287,108 @@
       this.playheadStartOffset = 0.0;
       this.playheadStartTime = 0.0;
 
-      const [bufA, bufB] = await Promise.all([
-        this._fetchAndDecode(flacSource),
-        this._fetchAndDecode(lossySource)
-      ]);
+      // Clean up previous HTML5 audio elements if present
+      if (this.htmlAudioA) {
+        try { this.htmlAudioA.pause(); this.htmlAudioA.src = ''; } catch (e) {}
+        this.htmlAudioA = null;
+      }
+      if (this.htmlAudioB) {
+        try { this.htmlAudioB.pause(); this.htmlAudioB.src = ''; } catch (e) {}
+        this.htmlAudioB = null;
+      }
 
-      this.bufferA = bufA;
-      this.bufferB = bufB;
-      // Duration bounded by the shortest decoded buffer for safety
-      this.duration = Math.min(this.bufferA.duration, this.bufferB.duration);
+      // If inputs are already pre-decoded AudioBuffers, use Web Audio mode immediately (e.g. in test suite)
+      if (isAudioBuffer(flacSource) && isAudioBuffer(lossySource)) {
+        this.bufferA = flacSource;
+        this.bufferB = lossySource;
+        this.duration = Math.min(flacSource.duration, lossySource.duration);
+        this.mode = 'webaudio';
+        return { duration: this.duration };
+      }
 
-      return { duration: this.duration };
+      // Check if we are running in browser on file:/// protocol
+      const isFileProtocol = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+
+      // If not file protocol, attempt Web Audio fetch & pre-decode
+      if (!isFileProtocol) {
+        try {
+          const [bufA, bufB] = await Promise.all([
+            this._fetchAndDecode(flacSource),
+            this._fetchAndDecode(lossySource)
+          ]);
+          this.bufferA = bufA;
+          this.bufferB = bufB;
+          this.duration = Math.min(this.bufferA.duration, this.bufferB.duration);
+          this.mode = 'webaudio';
+          return { duration: this.duration };
+        } catch (webaudioErr) {
+          console.warn('Web Audio pre-decode failed, falling back to synchronized HTML5 Audio elements:', webaudioErr);
+        }
+      }
+
+      // Fallback: HTML5 Audio Elements
+      // Seamlessly handles file:// protocol and native browser codecs (.flac, .m4a, .opus, .mp3) without CORS blocks
+      return new Promise((resolve, reject) => {
+        try {
+          if (typeof Audio === 'undefined') {
+            throw new Error('HTML5 Audio is not supported in this environment');
+          }
+
+          const audioA = new Audio();
+          const audioB = new Audio();
+
+          audioA.preload = 'auto';
+          audioB.preload = 'auto';
+          audioA.src = (typeof flacSource === 'string') ? flacSource : '';
+          audioB.src = (typeof lossySource === 'string') ? lossySource : '';
+
+          this.htmlAudioA = audioA;
+          this.htmlAudioB = audioB;
+          this.mode = 'html5';
+
+          let settled = false;
+          const checkReady = () => {
+            if (settled) return;
+            const durA = audioA.duration;
+            const durB = audioB.duration;
+            if (!isNaN(durA) && durA > 0 && !isNaN(durB) && durB > 0) {
+              settled = true;
+              this.duration = Math.min(durA, durB);
+              resolve({ duration: this.duration });
+            }
+          };
+
+          audioA.addEventListener('loadedmetadata', checkReady, { once: true });
+          audioB.addEventListener('loadedmetadata', checkReady, { once: true });
+          audioA.addEventListener('canplaythrough', checkReady, { once: true });
+          audioB.addEventListener('canplaythrough', checkReady, { once: true });
+
+          // If metadata is already cached / available
+          if (!isNaN(audioA.duration) && audioA.duration > 0 && !isNaN(audioB.duration) && audioB.duration > 0) {
+            settled = true;
+            this.duration = Math.min(audioA.duration, audioB.duration);
+            resolve({ duration: this.duration });
+            return;
+          }
+
+          audioA.load();
+          audioB.load();
+
+          // Safety timeout fallback (e.g. slow metadata resolution)
+          setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              const durA = (!isNaN(audioA.duration) && audioA.duration > 0) ? audioA.duration : 30.0;
+              const durB = (!isNaN(audioB.duration) && audioB.duration > 0) ? audioB.duration : 30.0;
+              this.duration = Math.min(durA, durB);
+              resolve({ duration: this.duration });
+            }
+          }, 800);
+
+        } catch (err) {
+          reject(err);
+        }
+      });
     }
 
     /**
@@ -331,6 +450,13 @@
      * @private
      */
     _computeCurrentPlayhead(now) {
+      if (this.mode === 'html5' && this.isPlaying && this.activeSource) {
+        const targetSource = (this.activeSource === 'X') ? this.revealTarget() : this.activeSource;
+        const activeAudio = (targetSource === 'A') ? this.htmlAudioA : this.htmlAudioB;
+        if (activeAudio && typeof activeAudio.currentTime === 'number' && !isNaN(activeAudio.currentTime) && activeAudio.currentTime > 0) {
+          return Math.min(this.duration, Math.max(0, activeAudio.currentTime));
+        }
+      }
       if (!this.isPlaying) {
         return Math.min(this.duration, Math.max(0, this.playheadStartOffset));
       }
@@ -344,12 +470,12 @@
 
     /**
      * Switches playback to the designated source ('A', 'B', or 'X') with seamless
-     * continuous playhead synchronization and a 10ms linear micro-crossfade.
+     * continuous playhead synchronization.
      * @param {'A'|'B'|'X'} sourceType
      */
     playSource(sourceType) {
       if (!this.isLoaded()) {
-        throw new Error('Cannot play: audio buffers are not loaded. Call loadTrack() first.');
+        throw new Error('Cannot play: audio is not loaded. Call loadTrack() first.');
       }
       if (sourceType !== 'A' && sourceType !== 'B' && sourceType !== 'X') {
         throw new Error(`Invalid sourceType "${sourceType}". Expected 'A', 'B', or 'X'.`);
@@ -359,7 +485,11 @@
         this.init();
       }
 
-      const now = this.audioContext.currentTime;
+      if (this.audioContext && this.audioContext.state === 'suspended' && typeof this.audioContext.resume === 'function') {
+        this.audioContext.resume().catch(() => {});
+      }
+
+      const now = this._getClockTime();
 
       // If already playing this exact source, maintain playback without interruption
       if (this.isPlaying && this.activeSource === sourceType) {
@@ -373,8 +503,47 @@
       const currentPlayhead = this._computeCurrentPlayhead(now);
 
       // If playhead reached or exceeded duration, loop back to start
-      const startOffset = currentPlayhead >= this.duration ? 0.0 : currentPlayhead;
+      const startOffset = (this.duration > 0 && currentPlayhead >= this.duration) ? 0.0 : currentPlayhead;
 
+      // Handle HTML5 Audio element fallback mode
+      if (this.mode === 'html5') {
+        const targetSource = (sourceType === 'X') ? this.revealTarget() : sourceType;
+        const incomingAudio = (targetSource === 'A') ? this.htmlAudioA : this.htmlAudioB;
+        const outgoingAudio = (targetSource === 'A') ? this.htmlAudioB : this.htmlAudioA;
+
+        if (outgoingAudio) {
+          outgoingAudio.pause();
+        }
+
+        if (incomingAudio) {
+          try {
+            incomingAudio.currentTime = startOffset;
+          } catch (e) {}
+
+          const playPromise = incomingAudio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.warn('HTML5 audio playback prevented by browser:', err);
+            });
+          }
+
+          incomingAudio.onended = () => {
+            this.stop();
+            this.playheadStartOffset = this.duration;
+          };
+        }
+
+        this.currentSourceNode = null;
+        this.currentGainNode = null;
+        this.activeSource = sourceType;
+        this.isPlaying = true;
+        this.playheadStartTime = now;
+        this.playheadStartOffset = startOffset;
+        this.lastAuditionTimestamp = now;
+        return;
+      }
+
+      // Web Audio mode:
       // 1. Perform 10ms micro-crossfade on outgoing source (if active)
       if (this.currentGainNode && this.currentSourceNode) {
         const outgoingGain = this.currentGainNode;
@@ -423,11 +592,17 @@
      * Stops audio playback, records current playhead position, and updates audition timer.
      */
     stop() {
-      if (!this.audioContext) return;
-
-      const now = this.audioContext.currentTime;
+      const now = this._getClockTime();
       this._accumulateAudition(now);
       this.playheadStartOffset = this._computeCurrentPlayhead(now);
+
+      if (this.mode === 'html5') {
+        if (this.htmlAudioA) this.htmlAudioA.pause();
+        if (this.htmlAudioB) this.htmlAudioB.pause();
+        this.isPlaying = false;
+        this.activeSource = null;
+        return;
+      }
 
       if (this.currentGainNode && this.currentSourceNode) {
         const outgoingGain = this.currentGainNode;
@@ -455,7 +630,7 @@
      * @returns {number} New playhead position in seconds.
      */
     seek(deltaSeconds) {
-      const now = this.audioContext ? this.audioContext.currentTime : 0;
+      const now = this._getClockTime();
       const currentPos = this._computeCurrentPlayhead(now);
       return this.setPlayhead(currentPos + deltaSeconds);
     }
@@ -471,9 +646,24 @@
 
       if (this.isPlaying && this.activeSource) {
         const currentSource = this.activeSource;
-        const now = this.audioContext.currentTime;
+        const now = this._getClockTime();
         this._accumulateAudition(now);
 
+        if (this.mode === 'html5') {
+          const targetSource = (currentSource === 'X') ? this.revealTarget() : currentSource;
+          const activeAudio = (targetSource === 'A') ? this.htmlAudioA : this.htmlAudioB;
+          if (activeAudio) {
+            try {
+              activeAudio.currentTime = clamped;
+            } catch (e) {}
+          }
+          this.playheadStartTime = now;
+          this.playheadStartOffset = clamped;
+          this.lastAuditionTimestamp = now;
+          return clamped;
+        }
+
+        // Web Audio mode:
         // Stop outgoing node
         if (this.currentGainNode && this.currentSourceNode) {
           const outgoingGain = this.currentGainNode;
@@ -512,6 +702,10 @@
         this.lastAuditionTimestamp = now;
       } else {
         this.playheadStartOffset = clamped;
+        if (this.mode === 'html5') {
+          if (this.htmlAudioA) try { this.htmlAudioA.currentTime = clamped; } catch (e) {}
+          if (this.htmlAudioB) try { this.htmlAudioB.currentTime = clamped; } catch (e) {}
+        }
       }
 
       return clamped;
@@ -522,7 +716,7 @@
      * @returns {{ currentTime: number, duration: number, isPlaying: boolean, activeSource: 'A'|'B'|'X'|null }}
      */
     getPlayheadPosition() {
-      const now = this.audioContext ? this.audioContext.currentTime : 0;
+      const now = this._getClockTime();
       const currentTime = this._computeCurrentPlayhead(now);
       return {
         currentTime,
@@ -538,7 +732,7 @@
      * @returns {{ durationA: number, durationX: number, durationB: number, gateSatisfied: boolean }}
      */
     getAuditionStats() {
-      const now = this.audioContext ? this.audioContext.currentTime : 0;
+      const now = this._getClockTime();
       let durA = this.durationA;
       let durX = this.durationX;
       let durB = this.durationB;
@@ -567,9 +761,7 @@
       this.durationA = 0.0;
       this.durationX = 0.0;
       this.durationB = 0.0;
-      if (this.audioContext) {
-        this.lastAuditionTimestamp = this.audioContext.currentTime;
-      }
+      this.lastAuditionTimestamp = this._getClockTime();
     }
   }
 

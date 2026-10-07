@@ -532,7 +532,6 @@
   }
   .source-btn.active .source-badge { background: var(--accent); color: #fff; }
   .source-btn .source-title { font-weight: 700; font-size: 15px; }
-  .source-btn .source-sub { font-size: 12px; color: var(--muted); text-align: center; }
   .source-gate {
     display: flex;
     align-items: center;
@@ -1099,10 +1098,9 @@
       </div>
       <div class="listen-buttons">
         <!-- Source A -->
-        <button class="source-btn" id="btn-source-a" data-source="A" aria-label="Listen to Source A (FLAC Master)">
+        <button class="source-btn" id="btn-source-a" data-source="A" aria-label="Listen to Source A">
           <div class="source-badge">A</div>
           <span class="source-title">Source A</span>
-          <span class="source-sub">Lossless FLAC Master</span>
           <div class="source-gate" id="gate-a">
             <span class="gate-time">0.0s</span>
             <span class="gate-status">Need 2.0s</span>
@@ -1111,10 +1109,9 @@
         </button>
 
         <!-- Source X -->
-        <button class="source-btn" id="btn-source-x" data-source="X" aria-label="Listen to Source X (Secret Target)">
+        <button class="source-btn" id="btn-source-x" data-source="X" aria-label="Listen to Source X">
           <div class="source-badge">X</div>
           <span class="source-title">Source X</span>
-          <span class="source-sub">Secret Target</span>
           <div class="source-gate" id="gate-x">
             <span class="gate-time">0.0s</span>
             <span class="gate-status">Need 2.0s</span>
@@ -1123,10 +1120,9 @@
         </button>
 
         <!-- Source B -->
-        <button class="source-btn" id="btn-source-b" data-source="B" aria-label="Listen to Source B (Lossy Target)">
+        <button class="source-btn" id="btn-source-b" data-source="B" aria-label="Listen to Source B">
           <div class="source-badge">B</div>
           <span class="source-title">Source B</span>
-          <span class="source-sub" id="source-b-sub">Lossy Format</span>
           <div class="source-gate" id="gate-b">
             <span class="gate-time">0.0s</span>
             <span class="gate-status">Need 2.0s</span>
@@ -1140,7 +1136,7 @@
     <div class="sci-section-panel">
       <div class="panel-header">
         <h3>2. CHOOSE</h3>
-        <span class="gate-message" id="gate-message">🔒 Audition A, X, and B for at least 2.0s each to unlock choices</span>
+        <span class="gate-message" id="gate-message">Audition A, X, and B for at least 2.0s each to unlock choices</span>
       </div>
       <div class="choose-buttons">
         <button class="choose-btn" id="btn-choose-a" disabled aria-label="Choose X is A">
@@ -2473,8 +2469,6 @@
     if (catEl) catEl.textContent = track.cat;
     const hintEl = $('#sci-hint');
     if (hintEl) hintEl.innerHTML = `<b>Listen for:</b> ${esc(track.hint)}`;
-    const subB = $('#source-b-sub');
-    if (subB) subB.textContent = CODECS[sciTestState.codec].name;
 
     // Render waveform bars
     const bars = getWaveBars(track.id);
@@ -2490,11 +2484,15 @@
     const timeEl = $('#sci-time');
     if (timeEl) timeEl.innerHTML = '<b>0:00</b> / 0:30';
 
-    if (typeof ScientificAudioEngine !== 'undefined') {
-      ScientificAudioEngine.stop();
-      await ScientificAudioEngine.loadTrack(track.files.flac, track.files[sciTestState.codec]);
-      ScientificAudioEngine.assignTrialTarget(trackIndex, sciTestState.currentTrialIndex);
-      ScientificAudioEngine.resetTrialAudition();
+    try {
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        ScientificAudioEngine.stop();
+        await ScientificAudioEngine.loadTrack(track.files.flac, track.files[sciTestState.codec]);
+        ScientificAudioEngine.assignTrialTarget(trackIndex, sciTestState.currentTrialIndex);
+        ScientificAudioEngine.resetTrialAudition();
+      }
+    } catch (err) {
+      console.error('Failed to load scientific audio track:', err);
     }
 
     updateTrialMeta();
@@ -2529,7 +2527,7 @@
     if (commitHint) commitHint.textContent = 'Make a choice above to enable commit';
     if (gateMsg) {
       gateMsg.className = 'gate-message';
-      gateMsg.textContent = '🔒 Audition A, X, and B for at least 2.0s each to unlock choices';
+      gateMsg.textContent = 'Audition A, X, and B for at least 2.0s each to unlock choices';
     }
 
     ['a', 'x', 'b'].forEach(s => {
@@ -2594,7 +2592,7 @@
         if (tEl) tEl.textContent = `${item.dur.toFixed(1)}s`;
         if (item.dur >= 2.0) {
           gate.className = 'source-gate ok';
-          if (sEl) sEl.textContent = '✓ Ready';
+          if (sEl) sEl.textContent = 'Ready';
         } else {
           gate.className = 'source-gate';
           if (sEl) sEl.textContent = `Need ${(2.0 - item.dur).toFixed(1)}s`;
@@ -2611,14 +2609,14 @@
       if (btnChooseB && btnChooseB.disabled) btnChooseB.disabled = false;
       if (gateMsg && !gateMsg.classList.contains('unlocked')) {
         gateMsg.className = 'gate-message unlocked';
-        gateMsg.textContent = '✓ Choices unlocked. Select your answer:';
+        gateMsg.textContent = 'Choices unlocked. Select your answer:';
       }
     } else {
       if (btnChooseA && !btnChooseA.disabled) btnChooseA.disabled = true;
       if (btnChooseB && !btnChooseB.disabled) btnChooseB.disabled = true;
       if (gateMsg && gateMsg.classList.contains('unlocked')) {
         gateMsg.className = 'gate-message';
-        gateMsg.textContent = '🔒 Audition A, X, and B for at least 2.0s each to unlock choices';
+        gateMsg.textContent = 'Audition A, X, and B for at least 2.0s each to unlock choices';
       }
     }
   }
@@ -2630,13 +2628,31 @@
 
   // Source audition buttons
   $('#btn-source-a').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('A');
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      try {
+        ScientificAudioEngine.playSource('A');
+      } catch (err) {
+        console.warn('Error auditioning Source A:', err);
+      }
+    }
   });
   $('#btn-source-x').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('X');
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      try {
+        ScientificAudioEngine.playSource('X');
+      } catch (err) {
+        console.warn('Error auditioning Source X:', err);
+      }
+    }
   });
   $('#btn-source-b').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.playSource('B');
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      try {
+        ScientificAudioEngine.playSource('B');
+      } catch (err) {
+        console.warn('Error auditioning Source B:', err);
+      }
+    }
   });
 
   // Transport seek / stop
@@ -2905,9 +2921,9 @@
     // Response bias diagnostic text
     const biasText = $('#sci-bias-text');
     if (bias.biased) {
-      biasText.innerHTML = `<b>⚠️ Response Bias Detected (p = ${bias.pValue.toFixed(4)}):</b> You chose "X is A" ${bias.countA} times (${(bias.propA * 100).toFixed(1)}%) and "X is B" ${bias.countB} times. This statistically significant imbalance indicates a systematic selection bias when uncertain.`;
+      biasText.innerHTML = `<b>Response Bias Detected (p = ${bias.pValue.toFixed(4)}):</b> You chose "X is A" ${bias.countA} times (${(bias.propA * 100).toFixed(1)}%) and "X is B" ${bias.countB} times. This statistically significant imbalance indicates a systematic selection bias when uncertain.`;
     } else {
-      biasText.innerHTML = `<b>✓ Balanced Response Distribution:</b> You chose "X is A" ${bias.countA} times (${(bias.propA * 100).toFixed(1)}%) and "X is B" ${bias.countB} times (two-sided binomial test p = ${bias.pValue.toFixed(4)}). No statistically significant response bias was detected.`;
+      biasText.innerHTML = `<b>Balanced Response Distribution:</b> You chose "X is A" ${bias.countA} times (${(bias.propA * 100).toFixed(1)}%) and "X is B" ${bias.countB} times (two-sided binomial test p = ${bias.pValue.toFixed(4)}). No statistically significant response bias was detected.`;
     }
   }
 

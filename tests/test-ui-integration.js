@@ -159,6 +159,15 @@ test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net 
   trialElements.forEach(el => {
     assert(indexHTML.includes(el), `Scientific trial view must contain ${el}`);
   });
+
+  // Verify unbiased listen buttons (no codec information to prevent expectation bias)
+  assert(!indexHTML.includes('source-sub'), 'Must not contain biasing codec subtitle elements on listen buttons');
+  assert(!indexHTML.includes('id="source-b-sub"'), 'Must not contain biasing codec subtitle element on Source B button');
+});
+
+test('index.html contains zero distracting emojis across all UI elements', () => {
+  const broadEmojiRegex = /[\u{1F000}-\u{1FAFF}\u{200D}\u{2300}-\u{23FF}\u{2460}-\u{24FF}\u{25A0}-\u{25FF}\u{2600}-\u{27BF}\u{2900}-\u{297F}\u{2B00}-\u{2BFF}]/u;
+  assert(!broadEmojiRegex.test(indexHTML), 'UI elements must be clean without unicode emojis');
 });
 
 test('index.html Scientific Rest screen contains 30s countdown and continue button', () => {
@@ -365,7 +374,7 @@ function createMockEnvironment() {
     'btn-show-hotkeys', 'btn-begin-scientific',
     'trial-meta-track', 'trial-meta-trial', 'trial-meta-total', 'trial-progress-fill',
     'sci-cover', 'sci-title', 'sci-artist', 'sci-cat', 'sci-hint',
-    'source-b-sub', 'sci-wave-bg', 'sci-wave-fill', 'sci-wave', 'sci-time',
+    'sci-wave-bg', 'sci-wave-fill', 'sci-wave', 'sci-time',
     'btn-sci-rewind', 'btn-sci-seek-back', 'btn-sci-seek-fwd', 'btn-sci-stop',
     'btn-source-a', 'btn-source-x', 'btn-source-b',
     'gate-a', 'gate-x', 'gate-b', 'gate-message',

@@ -538,6 +538,79 @@ async function runSuite() {
   });
 
   // -------------------------------------------------------------
+  // 9. HTML5 Audio Element Fallback Mode
+  // -------------------------------------------------------------
+  console.log('\n9. HTML5 Audio Element Fallback Mode:');
+
+  await testAsync('loadTrack falls back to HTML5 Audio elements when passing URLs or on decoding fallback', async () => {
+    class MockHTMLAudio {
+      constructor() {
+        this.src = '';
+        this.duration = 30.0;
+        this.currentTime = 0.0;
+        this.paused = true;
+        this.listeners = {};
+      }
+      addEventListener(evt, fn) {
+        if (!this.listeners[evt]) this.listeners[evt] = [];
+        this.listeners[evt].push(fn);
+      }
+      load() {}
+      play() {
+        this.paused = false;
+        return Promise.resolve();
+      }
+      pause() {
+        this.paused = true;
+      }
+    }
+
+    const prevAudio = global.Audio;
+    global.Audio = MockHTMLAudio;
+
+    try {
+      const mockCtx = new MockAudioContext();
+      const htmlEngine = new ScientificAudioEngine.ScientificAudioEngine({ audioContext: mockCtx });
+
+      // Intentionally pass string paths with an unsupported fetch to trigger fallback
+      const prevFetch = global.fetch;
+      global.fetch = () => Promise.reject(new Error('Simulated network/CORS error on file:// or decode failure'));
+
+      try {
+        const res = await htmlEngine.loadTrack('audio/song1_flac.flac', 'audio/song1_opus.opus');
+        assert.strictEqual(htmlEngine.isLoaded(), true, 'HTML5 engine must report isLoaded = true');
+        assert.strictEqual(htmlEngine.mode, 'html5', 'Mode must be html5');
+        approxEqual(res.duration, 30.0, 0.01);
+
+        htmlEngine.assignTrialTarget();
+        htmlEngine.playSource('A');
+        assert.strictEqual(htmlEngine.activeSource, 'A');
+        assert.strictEqual(htmlEngine.isPlaying, true);
+        assert.strictEqual(htmlEngine.htmlAudioA.paused, false);
+
+        // Switch to B
+        htmlEngine.playSource('B');
+        assert.strictEqual(htmlEngine.activeSource, 'B');
+        assert.strictEqual(htmlEngine.htmlAudioA.paused, true);
+        assert.strictEqual(htmlEngine.htmlAudioB.paused, false);
+
+        // Seek
+        htmlEngine.seek(5);
+        approxEqual(htmlEngine.getPlayheadPosition().currentTime, 5.0, 0.5);
+
+        // Stop
+        htmlEngine.stop();
+        assert.strictEqual(htmlEngine.isPlaying, false);
+        assert.strictEqual(htmlEngine.htmlAudioB.paused, true);
+      } finally {
+        global.fetch = prevFetch;
+      }
+    } finally {
+      global.Audio = prevAudio;
+    }
+  });
+
+  // -------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------
   console.log(`\nTest Summary: ${passed} passed, ${failed} failed\n`);
