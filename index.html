@@ -1699,6 +1699,11 @@
     currentView = targetView;
     updateTopBar();
     window.scrollTo({ top: 0, behavior: 'auto' });
+
+    // Always ensure live playback animation loop runs when entering trial view
+    if (targetView === VIEWS.SCI_TRIAL) {
+      startSciLiveLoop();
+    }
   }
 
   function updateTopBar() {
@@ -2496,6 +2501,7 @@
     }
 
     updateTrialMeta();
+    updateSciPlaybackUI();
   }
 
   function updateTrialMeta() {
@@ -2657,16 +2663,28 @@
 
   // Transport seek / stop
   $('#btn-sci-rewind').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.setPlayhead(0);
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.setPlayhead(0);
+      updateSciPlaybackUI();
+    }
   });
   $('#btn-sci-seek-back').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(-5);
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.seek(-5);
+      updateSciPlaybackUI();
+    }
   });
   $('#btn-sci-seek-fwd').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(5);
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.seek(5);
+      updateSciPlaybackUI();
+    }
   });
   $('#btn-sci-stop').addEventListener('click', () => {
-    if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.stop();
+    if (typeof ScientificAudioEngine !== 'undefined') {
+      ScientificAudioEngine.stop();
+      updateSciPlaybackUI();
+    }
   });
 
   // Waveform interactive scrubber
@@ -2675,18 +2693,28 @@
     const w = $('#sci-wave');
     if (!w || typeof ScientificAudioEngine === 'undefined') return;
     const rect = w.getBoundingClientRect();
+    if (rect.width <= 0) return;
     const pos = ScientificAudioEngine.getPlayheadPosition();
     const dur = pos.duration || 30;
-    const target = Math.max(0, Math.min(dur, ((e.clientX - rect.left) / rect.width) * dur));
+    const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+    const target = Math.max(0, Math.min(dur, ((clientX - rect.left) / rect.width) * dur));
     ScientificAudioEngine.setPlayhead(target);
+    updateSciPlaybackUI();
   }
 
   $('#sci-wave').addEventListener('pointerdown', e => {
     sciDragging = true;
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
     seekSciFrom(e);
   });
   window.addEventListener('pointermove', e => { if (sciDragging) seekSciFrom(e); });
-  window.addEventListener('pointerup', () => { sciDragging = false; });
+  window.addEventListener('pointerup', e => {
+    if (sciDragging) {
+      sciDragging = false;
+      try { e.target.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+  });
+  window.addEventListener('pointercancel', () => { sciDragging = false; });
 
   // Choices
   function setScientificChoice(choice) {
@@ -2805,10 +2833,29 @@
       }
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(-5);
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        ScientificAudioEngine.seek(-5);
+        updateSciPlaybackUI();
+      }
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      if (typeof ScientificAudioEngine !== 'undefined') ScientificAudioEngine.seek(5);
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        ScientificAudioEngine.seek(5);
+        updateSciPlaybackUI();
+      }
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        ScientificAudioEngine.setPlayhead(0);
+        updateSciPlaybackUI();
+      }
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      if (typeof ScientificAudioEngine !== 'undefined') {
+        const pos = ScientificAudioEngine.getPlayheadPosition();
+        ScientificAudioEngine.setPlayhead(pos.duration || 30);
+        updateSciPlaybackUI();
+      }
     }
   });
 
@@ -2843,6 +2890,8 @@
     if (restCountdownInterval) clearInterval(restCountdownInterval);
     switchView(VIEWS.SCI_TRIAL);
     await loadScientificTrack(sciTestState.currentTrackIndex);
+    startSciLiveLoop();
+    updateSciPlaybackUI();
   }
 
   $('#btn-rest-continue').addEventListener('click', continueFromRest);

@@ -57,9 +57,10 @@ const indexHTML = fs.readFileSync(INDEX_HTML_PATH, 'utf8');
 // ----------------------------------------------------------------------------
 // 1. Static HTML Inspection & Resource Inclusions
 // ----------------------------------------------------------------------------
-console.log('1. Static HTML Structure & Resource Inclusions:');
+async function runSuite() {
+  console.log('1. Static HTML Structure & Resource Inclusions:');
 
-test('index.html exists and is readable with complete structure', () => {
+  test('index.html exists and is readable with complete structure', () => {
   assert(indexHTML.length > 5000, 'index.html should have substantial content');
   assert(indexHTML.includes('<!doctype html>'), 'index.html must have HTML5 doctype');
 });
@@ -288,6 +289,7 @@ class MockElement {
     this.style = {
       display: '',
       setProperty: (k, v) => { this.style[k] = v; },
+      getPropertyValue: (k) => this.style[k] || '',
       width: ''
     };
     this._textContent = '';
@@ -505,14 +507,38 @@ function createMockEnvironment() {
   mockDocument.body.removeChild = function() {};
 
   const eventListeners = {};
+  class MockAudio {
+    constructor() {
+      this.src = '';
+      this.duration = 30.0;
+      this.currentTime = 0.0;
+      this.paused = true;
+      this.listeners = {};
+    }
+    addEventListener(evt, fn) {
+      if (!this.listeners[evt]) this.listeners[evt] = [];
+      this.listeners[evt].push(fn);
+    }
+    removeEventListener(evt, fn) {
+      if (this.listeners[evt]) {
+        this.listeners[evt] = this.listeners[evt].filter(h => h !== fn);
+      }
+    }
+    load() {}
+    play() {
+      this.paused = false;
+      return Promise.resolve();
+    }
+    pause() {
+      this.paused = true;
+    }
+  }
+
+  global.Audio = MockAudio;
+
   const mockWindow = {
     document: mockDocument,
-    Audio: class MockAudio {
-      constructor() { this.src = ''; }
-      play() { return Promise.resolve(); }
-      pause() {}
-      addEventListener() {}
-    },
+    Audio: MockAudio,
     addEventListener(event, fn) {
       if (!eventListeners[event]) eventListeners[event] = [];
       eventListeners[event].push(fn);
@@ -747,7 +773,7 @@ test('Trial workflow: engagement gate locks choices until threshold, unlocks at 
   assert.strictEqual(btnCommit.disabled, false, 'Commit should be enabled when choice selected');
 });
 
-test('Commit workflow: reveals target, appends trial record, and advances trial index', async () => {
+await testAsync('Commit workflow: reveals target, appends trial record, and advances trial index', async () => {
   const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
   const ScientificStats = require(STATS_JS_PATH);
   const ScientificAudioEngine = require(AUDIO_JS_PATH);
@@ -807,6 +833,74 @@ test('Commit workflow: reveals target, appends trial record, and advances trial 
   assert.strictEqual(typeof trials[0].isCorrect, 'boolean', 'isCorrect must be boolean');
   assert.strictEqual(vm.runInContext(`sciTestState.currentTrialIndex`, sandbox), 1, 'Trial index advanced');
   assert.strictEqual(vm.runInContext(`sciTestState.overallTrialIndex`, sandbox), 1, 'Overall trial index advanced');
+});
+
+await testAsync('Track transition workflow: live animation loop and scrubber persist when continuing to Song 2 from Rest', async () => {
+  const { mockWindow, mockDocument, domNodes } = createMockEnvironment();
+  const ScientificStats = require(STATS_JS_PATH);
+  const ScientificAudioEngine = require(AUDIO_JS_PATH);
+
+  const sandbox = {
+    window: mockWindow,
+    document: mockDocument,
+    ScientificStats,
+    ScientificAudioEngine,
+    Audio: mockWindow.Audio,
+    matchMedia: mockWindow.matchMedia,
+    localStorage: mockWindow.localStorage,
+    setInterval: (fn) => 102,
+    clearInterval: () => {},
+    setTimeout: mockWindow.setTimeout,
+    console
+  };
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  // Setup trial state at the last trial of Track 1 (Trial 5 of 5)
+  vm.runInContext(`
+    switchView(VIEWS.SCI_TRIAL);
+    sciTestState = {
+      codec: 'aac256',
+      trackCount: 5,
+      trialsPerTrack: 5,
+      totalTrials: 25,
+      tracks: SONG_CATEGORIES.slice(0, 5).map(c => c.contenders[0]),
+      currentTrackIndex: 0,
+      currentTrialIndex: 4, // 5th trial (0-indexed)
+      overallTrialIndex: 4,
+      currentChoice: 'A',
+      trials: []
+    };
+    ScientificAudioEngine.assignTrialTarget(0, 4);
+  `, sandbox);
+
+  // Commit trial 5 of Track 1 -> transitions to Rest screen
+  await vm.runInContext(`commitScientificTrial();`, sandbox);
+
+  assert.strictEqual(domNodes.get('view-scientific-rest').hidden, false, 'Rest view should be visible');
+  assert.strictEqual(domNodes.get('view-scientific-trial').hidden, true, 'Trial view should be hidden');
+  assert.strictEqual(vm.runInContext(`sciPlayheadInterval`, sandbox), null, 'sciPlayheadInterval paused during rest');
+
+  // User clicks "Continue to Next Track" (Song 2)
+  await vm.runInContext(`continueFromRest();`, sandbox);
+
+  assert.strictEqual(domNodes.get('view-scientific-trial').hidden, false, 'Trial view must be restored for Song 2');
+  assert.strictEqual(domNodes.get('view-scientific-rest').hidden, true, 'Rest view must be hidden');
+  assert.notStrictEqual(vm.runInContext(`sciPlayheadInterval`, sandbox), null, 'sciPlayheadInterval must be running on Song 2');
+  assert.strictEqual(vm.runInContext(`sciTestState.currentTrackIndex`, sandbox), 1, 'Current track is Song 2 (index 1)');
+
+  // Verify scrubber can control position on Song 2
+  vm.runInContext(`
+    const waveEl = document.getElementById('sci-wave');
+    waveEl.getBoundingClientRect = () => ({ left: 0, width: 200, top: 0, height: 72 });
+    seekSciFrom({ clientX: 100 }); // Seek to 50% = 15s
+  `, sandbox);
+
+  const pos = ScientificAudioEngine.getPlayheadPosition();
+  assert(pos.currentTime >= 14 && pos.currentTime <= 16, 'Playhead position must be updated to 15s on Song 2');
+  assert.strictEqual(domNodes.get('sci-wave').style.getPropertyValue('--p'), '50.00%', 'Scrubber style must reflect 50% on Song 2');
+  assert(domNodes.get('sci-time').innerHTML.includes('0:15'), 'Time display must reflect 0:15 on Song 2');
 });
 
 test('Full battery completion: renders results banner, Holm table, and response bias', () => {
@@ -955,11 +1049,17 @@ test('test-audio.js runs and passes with zero regressions', () => {
 // ----------------------------------------------------------------------------
 // Test Suite Summary
 // ----------------------------------------------------------------------------
-console.log('\n=============================================');
-console.log(`UI Integration Suite Finished: ${passed} passed, ${failed} failed.`);
-if (failed > 0) {
-  console.error('FAILED: One or more integration tests failed.');
-  process.exit(1);
-} else {
-  console.log('SUCCESS: All UI integration tests passed cleanly!');
+  console.log('\n=============================================');
+  console.log(`UI Integration Suite Finished: ${passed} passed, ${failed} failed.`);
+  if (failed > 0) {
+    console.error('FAILED: One or more integration tests failed.');
+    process.exit(1);
+  } else {
+    console.log('SUCCESS: All UI integration tests passed cleanly!');
+  }
 }
+
+runSuite().catch(err => {
+  console.error('Test suite crashed with unhandled error:', err);
+  process.exit(1);
+});

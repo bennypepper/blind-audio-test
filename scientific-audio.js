@@ -330,12 +330,13 @@
       // Seamlessly handles file:// protocol and native browser codecs (.flac, .m4a, .opus, .mp3) without CORS blocks
       return new Promise((resolve, reject) => {
         try {
-          if (typeof Audio === 'undefined') {
+          const AudioCtor = (typeof Audio !== 'undefined') ? Audio : (typeof window !== 'undefined' && window.Audio ? window.Audio : (typeof globalThis !== 'undefined' && globalThis.Audio ? globalThis.Audio : null));
+          if (!AudioCtor) {
             throw new Error('HTML5 Audio is not supported in this environment');
           }
 
-          const audioA = new Audio();
-          const audioB = new Audio();
+          const audioA = new AudioCtor();
+          const audioB = new AudioCtor();
 
           audioA.preload = 'auto';
           audioB.preload = 'auto';
@@ -453,7 +454,7 @@
       if (this.mode === 'html5' && this.isPlaying && this.activeSource) {
         const targetSource = (this.activeSource === 'X') ? this.revealTarget() : this.activeSource;
         const activeAudio = (targetSource === 'A') ? this.htmlAudioA : this.htmlAudioB;
-        if (activeAudio && typeof activeAudio.currentTime === 'number' && !isNaN(activeAudio.currentTime) && activeAudio.currentTime > 0) {
+        if (activeAudio && typeof activeAudio.currentTime === 'number' && !isNaN(activeAudio.currentTime) && activeAudio.currentTime >= 0) {
           return Math.min(this.duration, Math.max(0, activeAudio.currentTime));
         }
       }
