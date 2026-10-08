@@ -348,6 +348,7 @@
 
   /* Dialogs */
   dialog { border: 1px solid var(--line); border-radius: var(--r-panel); padding: 24px; width: calc(100% - 32px); max-width: 520px; margin: auto; background: var(--surface); color: var(--ink); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+  dialog.dialog-help { max-width: 640px; }
   dialog::backdrop { background: var(--dialog-backdrop); }
   dialog h2 { font-size: 20px; }
   dialog p { margin-top: 8px; color: var(--muted); font-size: 15px; }
@@ -355,6 +356,61 @@
   .dialog-scroll-body { max-height: 60vh; overflow-y: auto; margin-top: 14px; font-size: 14px; color: var(--ink); }
   .dialog-scroll-body h4 { margin-top: 14px; margin-bottom: 6px; font-size: 15px; }
   .dialog-scroll-body p { margin-top: 6px; color: var(--ink); font-size: 14px; line-height: 1.45; }
+
+  /* Universal Help Dialog Tabs & Panes */
+  .dlg-header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .help-nav-tabs {
+    display: inline-flex;
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: var(--r-ctl);
+    padding: 3px;
+    gap: 3px;
+  }
+  .help-nav-tab {
+    padding: 5px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    border-radius: calc(var(--r-ctl) - 2px);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+  .help-nav-tab:hover {
+    color: var(--ink);
+  }
+  .help-nav-tab.active {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .help-section-intro {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.45;
+    padding: 9px 13px;
+    background: var(--soft);
+    border-radius: var(--r-ctl);
+    margin-bottom: 14px;
+    border-left: 3px solid var(--accent);
+  }
+  .help-pane {
+    display: block;
+  }
+  .help-pane[style*="display: none"] {
+    display: none !important;
+  }
 
   /* ==========================================================================
      MODE SELECTION PORTAL (#view-mode-select) — UNIFIED EVALUATION CONSOLE
@@ -474,25 +530,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-  }
-  .bench-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--good-ink);
-    background: var(--good-soft);
-    padding: 3px 10px;
-    border-radius: 999px;
-  }
-  .bench-status-pill::before {
-    content: "";
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--good);
   }
   .bench-body {
     padding: 22px 26px;

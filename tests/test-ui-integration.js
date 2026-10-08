@@ -226,10 +226,18 @@ test('index.html Scientific Results screen contains verdict banner, stats grid, 
   });
 });
 
-test('index.html contains required modal dialogs', () => {
+test('index.html contains required modal dialogs and universal help guide', () => {
   assert(indexHTML.includes('id="dlg"'), 'Standard reshuffle dialog #dlg must exist');
   assert(indexHTML.includes('id="dlg-switch-mode"'), 'Mode switch confirmation dialog #dlg-switch-mode must exist');
   assert(indexHTML.includes('id="dlg-instructions"'), 'Instructions & Hotkeys dialog #dlg-instructions must exist');
+  assert(indexHTML.includes('id="tab-help-standard"'), 'Help dialog must contain Standard Challenge tab');
+  assert(indexHTML.includes('id="tab-help-scientific"'), 'Help dialog must contain Scientific ABX tab');
+  assert(indexHTML.includes('id="tab-help-tips"'), 'Help dialog must contain Listening Tips tab');
+  assert(indexHTML.includes('id="pane-help-standard"'), 'Help dialog must contain Standard Challenge pane');
+  assert(indexHTML.includes('id="pane-help-scientific"'), 'Help dialog must contain Scientific ABX pane');
+  assert(indexHTML.includes('id="pane-help-tips"'), 'Help dialog must contain Listening Tips pane');
+  assert(!indexHTML.includes('bench-status-pill'), 'index.html must not contain AI-slop status pills');
+  assert(!indexHTML.includes('Ready to Configure'), 'index.html must not contain Ready to Configure status pill');
 });
 
 // ----------------------------------------------------------------------------

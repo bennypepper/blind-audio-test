@@ -42,9 +42,9 @@
         <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
-      <button class="btn btn-quiet btn-sm btn-top-hotkeys" id="btn-top-hotkeys" title="Instructions &amp; Hotkeys (?)" aria-label="View instructions and keyboard shortcuts">
+      <button class="btn btn-quiet btn-sm btn-top-hotkeys" id="btn-top-hotkeys" title="Help &amp; Protocols (?)" aria-label="View testing guide and keyboard shortcuts">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span class="lbl-hotkeys">Hotkeys</span>
+        <span class="lbl-hotkeys">Help</span>
       </button>
       <button class="btn btn-quiet btn-sm" id="reshuffle" aria-label="Reshuffle songs" style="display: none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
@@ -95,7 +95,6 @@
           <span style="opacity: 0.4;">/</span>
           <span>Standard Protocol</span>
         </div>
-        <span class="bench-status-pill">Ready to Initialize</span>
       </div>
 
       <div class="bench-body">
@@ -175,7 +174,6 @@
           <span style="opacity: 0.4;">/</span>
           <span>Scientific ABX Protocol</span>
         </div>
-        <span class="bench-status-pill">Ready to Configure</span>
       </div>
 
       <div class="bench-body">
@@ -723,28 +721,80 @@
   </div>
 </dialog>
 
-<!-- Dialog: Instructions & Hotkeys -->
-<dialog id="dlg-instructions" aria-labelledby="dlg-inst-title">
-  <h2 id="dlg-inst-title">ABX Instructions &amp; Keyboard Shortcuts</h2>
-  <div class="dialog-scroll-body">
-    <h4>How the ABX Protocol Works</h4>
-    <p>1. In each trial, <b>A</b> is the lossless CD master, <b>B</b> is the lossy comparison format, and <b>X</b> is the secret target (randomly assigned to either A or B with 50/50 probability by cryptographic CSPRNG).</p>
-    <p>2. Switch between A, X, and B seamlessly while listening. Playback synchronizes sample-accurately with a 10ms micro-crossfade to eliminate telltale switching clicks.</p>
-    <p>3. <b>Audition Engagement Gate:</b> To prevent hasty guessing, you must listen to each source (A, X, and B) for at least 2.0 seconds before the choice buttons unlock.</p>
-    <p>4. Once unlocked, decide whether <b>X is A</b> or <b>X is B</b>, then click <b>Next</b> (or press Enter) to advance.</p>
-    <p>5. Trials are strictly double-blind: no immediate feedback is given during testing. Exact binomial p-values, 95% Clopper&ndash;Pearson confidence intervals, and Holm&ndash;Bonferroni corrections are displayed upon completion.</p>
+<!-- Dialog: Universal Help & Protocols Guide -->
+<dialog id="dlg-instructions" class="dialog-help" aria-labelledby="dlg-inst-title">
+  <div class="dlg-header-row">
+    <h2 id="dlg-inst-title">Audio Evaluation Guide</h2>
+    <div class="help-nav-tabs" role="tablist" aria-label="Help Guide Topics">
+      <button class="help-nav-tab active" id="tab-help-standard" role="tab" aria-selected="true" aria-controls="pane-help-standard" data-target="standard">Standard Challenge</button>
+      <button class="help-nav-tab" id="tab-help-scientific" role="tab" aria-selected="false" aria-controls="pane-help-scientific" data-target="scientific">Scientific ABX</button>
+      <button class="help-nav-tab" id="tab-help-tips" role="tab" aria-selected="false" aria-controls="pane-help-tips" data-target="tips">Listening Tips</button>
+    </div>
+  </div>
 
-    <h4 style="margin-top: 18px;">Keyboard Shortcuts</h4>
-    <table class="hotkey-table">
-      <tr><td><kbd>A</kbd></td><td>Play Source A (Lossless Master)</td></tr>
-      <tr><td><kbd>X</kbd></td><td>Play Source X (Secret Target)</td></tr>
-      <tr><td><kbd>B</kbd></td><td>Play Source B (Lossy Target)</td></tr>
-      <tr><td><kbd>1</kbd></td><td>Choose "X is A" (once unlocked)</td></tr>
-      <tr><td><kbd>2</kbd></td><td>Choose "X is B" (once unlocked)</td></tr>
-      <tr><td><kbd>Enter</kbd></td><td>Commit choice &amp; advance to next trial</td></tr>
-      <tr><td><kbd>Space</kbd></td><td>Toggle Play / Stop</td></tr>
-      <tr><td><kbd>&larr;</kbd> / <kbd>&rarr;</kbd></td><td>Seek -5s / +5s</td></tr>
-    </table>
+  <div class="dialog-scroll-body">
+    <!-- Pane 1: Standard Challenge -->
+    <div id="pane-help-standard" class="help-pane active" role="tabpanel" aria-labelledby="tab-help-standard">
+      <div class="help-section-intro">
+        A rapid multi-tier streaming challenge designed to test your audio gear and auditory acuity across common audio formats.
+      </div>
+      <h4>How the Standard Challenge Works</h4>
+      <p>1. <b>Multiple Encoded Streams:</b> Each track presents up to 4 mystery audio streams. Exactly one is the uncompressed CD-quality master (16-bit / 44.1 kHz FLAC). The remaining streams are compressed lossy versions: AAC 256 kbps, Opus 128 kbps, and MP3 128 kbps.</p>
+      <p>2. <b>Sample-Accurate Playhead Sync:</b> Toggle "Keep playhead in sync" to maintain your playback position when switching between samples, letting you contrast the exact same millisecond of music.</p>
+      <p>3. <b>Interactive Waveform:</b> Click or drag anywhere along the waveform to scrub directly to transient-dense musical sections (drum intros, cymbals, or vocal passages).</p>
+      <p>4. <b>Identify &amp; Reveal:</b> Select which sample you believe is the uncompressed lossless FLAC master for each song, then click <b>Reveal Results</b> at the end of the test to calculate your detection score against chance probability.</p>
+
+      <h4 style="margin-top: 18px;">Keyboard &amp; Scrubber Controls</h4>
+      <table class="hotkey-table">
+        <tr><td><kbd>Space</kbd></td><td>Toggle Play / Pause on active sample</td></tr>
+        <tr><td><kbd>&larr;</kbd> / <kbd>&rarr;</kbd></td><td>Seek -5s / +5s along the waveform</td></tr>
+        <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Jump to track start / end</td></tr>
+        <tr><td><kbd>?</kbd></td><td>Open this Help Guide</td></tr>
+      </table>
+    </div>
+
+    <!-- Pane 2: Scientific ABX -->
+    <div id="pane-help-scientific" class="help-pane" role="tabpanel" aria-labelledby="tab-help-scientific" style="display: none;">
+      <div class="help-section-intro">
+        A rigorous double-blind, randomized ABX evaluation conforming to international audio testing standards (ITU-R BS.1116 / AES).
+      </div>
+      <h4>How the Scientific ABX Protocol Works</h4>
+      <p>1. <b>Double-Blind Blinding:</b> In each trial, <b>A</b> is the lossless CD master, <b>B</b> is the lossy comparison codec, and <b>X</b> is the secret target (cryptographically assigned to either A or B with 50/50 probability by hardware CSPRNG).</p>
+      <p>2. <b>Seamless Gapless Switching:</b> Switch between A, X, and B instantly while listening. Playback synchronizes sample-accurately with a 10ms micro-crossfade to eliminate telltale clicks.</p>
+      <p>3. <b>Audition Engagement Gate:</b> To prevent rushed guessing and ensure valid statistical data, you must listen to each source (A, X, and B) for at least 2.0 seconds before the choice buttons unlock.</p>
+      <p>4. <b>Make Your Choice:</b> Once unlocked, decide whether <b>X is A</b> or <b>X is B</b>, then click <b>Next</b> (or press Enter) to record your answer.</p>
+      <p>5. <b>Statistical Analysis:</b> No answers are revealed during testing. Upon battery completion, exact binomial p-values, 95% Clopper&ndash;Pearson confidence intervals, Holm&ndash;Bonferroni multi-track corrections, and response bias diagnostics are rendered.</p>
+
+      <h4 style="margin-top: 18px;">Keyboard Shortcuts (Scientific Mode)</h4>
+      <table class="hotkey-table">
+        <tr><td><kbd>A</kbd></td><td>Play Source A (Lossless Master)</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Play Source X (Secret Target)</td></tr>
+        <tr><td><kbd>B</kbd></td><td>Play Source B (Lossy Target)</td></tr>
+        <tr><td><kbd>1</kbd></td><td>Choose "X is A" (once unlocked)</td></tr>
+        <tr><td><kbd>2</kbd></td><td>Choose "X is B" (once unlocked)</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Commit choice &amp; advance to next trial</td></tr>
+        <tr><td><kbd>Space</kbd></td><td>Toggle Play / Stop playback</td></tr>
+        <tr><td><kbd>&larr;</kbd> / <kbd>&rarr;</kbd></td><td>Seek -5s / +5s</td></tr>
+        <tr><td><kbd>?</kbd></td><td>Open this Help Guide</td></tr>
+      </table>
+    </div>
+
+    <!-- Pane 3: Listening Tips & Gear -->
+    <div id="pane-help-tips" class="help-pane" role="tabpanel" aria-labelledby="tab-help-tips" style="display: none;">
+      <div class="help-section-intro">
+        Practical acoustic advice to ensure an accurate evaluation without equipment bottlenecks.
+      </div>
+      <h4>Equipment &amp; Configuration</h4>
+      <p><b>Use Wired Headphones or IEMs:</b> Bluetooth headphones re-encode audio using SBC or AAC compression, masking the subtle differences you are trying to test. A direct wired analog connection guarantees bit-transparent delivery.</p>
+      <p><b>Disable Equalization &amp; Enhancements:</b> Turn off software EQ, Bass Boost, Dolby Atmos, Spatial Audio, and volume normalization (Sound Check / ReplayGain) in your OS or browser settings.</p>
+      <p><b>Consistent Moderate Volume:</b> Avoid listening at very high sound pressure levels. Human hearing sensitivity changes with loudness (Fletcher&ndash;Munson curves), and fatigue accelerates quickly at high volumes.</p>
+
+      <h4 style="margin-top: 18px;">Critical Listening Cues</h4>
+      <p><b>High-Frequency Cymbals &amp; Shimmer:</b> Lossy audio codecs struggle most with non-harmonic, high-frequency transients. Listen for "swishing", watery swooshes, or blunted cymbal decays.</p>
+      <p><b>Transient Attacks:</b> Snare strikes, acoustic guitar fingerpicks, and hi-hat hits. Lossy codecs can introduce pre-echo or soften the sharpness of attack edges.</p>
+      <p><b>Room Reverberation:</b> In sparse or quiet passages, listen to how acoustic hall reverb fades naturally into silence.</p>
+      <p><b>Ear Fatigue:</b> Auditory adaptation sets in after 10&ndash;15 minutes of critical listening. Take 30-second rests between tracks to reset your acoustic perception.</p>
+    </div>
   </div>
   <div class="dlg-actions">
     <button class="btn btn-primary" id="dlg-inst-close">Got it</button>
@@ -769,6 +819,7 @@
 
   /* Helpers */
   const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from((r && r.querySelectorAll) ? r.querySelectorAll(s) : []);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
   const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
@@ -1588,16 +1639,63 @@
     });
   });
 
+  function switchHelpTab(target) {
+    const tabs = $$('.help-nav-tab');
+    const panes = $$('.help-pane');
+    tabs.forEach(tab => {
+      const match = tab.getAttribute('data-target') === target;
+      tab.classList.toggle('active', match);
+      tab.setAttribute('aria-selected', match ? 'true' : 'false');
+    });
+    panes.forEach(pane => {
+      const match = pane.id === `pane-help-${target}`;
+      pane.style.display = match ? 'block' : 'none';
+      pane.classList.toggle('active', match);
+    });
+  }
+
+  function openHelpDialog(preferredTab) {
+    const dlg = $('#dlg-instructions');
+    if (!dlg) return;
+
+    let targetTab = preferredTab;
+    if (!targetTab) {
+      if (typeof currentView !== 'undefined' && (currentView === VIEWS.SCI_SETUP || currentView === VIEWS.SCI_TRIAL || currentView === VIEWS.SCI_REST || currentView === VIEWS.SCI_RESULTS)) {
+        targetTab = 'scientific';
+      } else {
+        targetTab = 'standard';
+      }
+    }
+    switchHelpTab(targetTab);
+
+    if (typeof dlg.showModal === 'function') dlg.showModal();
+    else dlg.setAttribute('open', '');
+  }
+
+  $$('.help-nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-target');
+      if (target) switchHelpTab(target);
+    });
+  });
+
   const topHotkeysBtn = $('#btn-top-hotkeys');
   if (topHotkeysBtn) {
     topHotkeysBtn.addEventListener('click', () => {
-      const dlg = $('#dlg-instructions');
-      if (dlg) {
-        if (typeof dlg.showModal === 'function') dlg.showModal();
-        else dlg.setAttribute('open', '');
-      }
+      openHelpDialog();
     });
   }
+
+  // Global help shortcut (?) on non-trial views
+  window.addEventListener('keydown', e => {
+    if (typeof currentView !== 'undefined' && currentView === VIEWS.SCI_TRIAL) return;
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag === 'input' || activeTag === 'textarea' || document.querySelector('dialog[open]')) return;
+    if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+      e.preventDefault();
+      openHelpDialog();
+    }
+  });
 
   const sciPlayBtn = $('#btn-sci-play');
   if (sciPlayBtn) {
@@ -1614,7 +1712,7 @@
   }
 
   $('#btn-show-hotkeys').addEventListener('click', () => {
-    $('#dlg-instructions').showModal();
+    openHelpDialog('scientific');
   });
   $('#dlg-inst-close').addEventListener('click', () => {
     $('#dlg-instructions').close();
@@ -2069,14 +2167,11 @@
     if (e.key === '?' || (e.shiftKey && e.key === '/')) {
       e.preventDefault();
       const dlg = $('#dlg-instructions');
-      if (dlg) {
-        if (dlg.open) {
-          if (typeof dlg.close === 'function') dlg.close();
-          else dlg.removeAttribute('open');
-        } else {
-          if (typeof dlg.showModal === 'function') dlg.showModal();
-          else dlg.setAttribute('open', '');
-        }
+      if (dlg && dlg.open) {
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      } else {
+        openHelpDialog('scientific');
       }
       return;
     }
