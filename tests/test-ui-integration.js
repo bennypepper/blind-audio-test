@@ -150,6 +150,13 @@ test('index.html Scientific Setup contains comparisons, batteries, presets, and 
   });
 });
 
+test('index.html contains Vorbis 320 options and 5-stream matrix across Mode Select and Setup', () => {
+  assert(indexHTML.includes('value="vorbis320"'), 'index.html must contain value="vorbis320"');
+  assert(indexHTML.includes('data-codec="vorbis320"'), 'index.html must contain data-codec="vorbis320"');
+  assert(indexHTML.includes('Spotify Vorbis 320 kbps'), 'index.html must contain Spotify Vorbis 320 kbps');
+  assert(indexHTML.includes('5 Stream Matrix'), 'index.html Mode Select portal must contain 5 Stream Matrix');
+});
+
 test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net layout', () => {
   const trialElements = [
     'id="trial-meta-track"',
@@ -475,6 +482,7 @@ function createMockEnvironment() {
 
   // Setup cards and radio inputs
   const codecCards = [
+    { codec: 'vorbis320', checked: false },
     { codec: 'aac256', checked: true },
     { codec: 'opus128', checked: false },
     { codec: 'mp3128', checked: false }
@@ -753,6 +761,111 @@ test('Pre-registration statistical box updates dynamically on preset change', ()
   assert.strictEqual(domNodes.get('stat-n').textContent, '160');
   assert.strictEqual(domNodes.get('stat-scrit').textContent, '92 correct (57.5%)');
   assert(domNodes.get('stat-alpha').textContent.includes('0.0373'));
+});
+
+test('Scientific setup: selecting vorbis320 toggles active class on vorbis320 option card', () => {
+  const mockEnv = createMockEnvironment();
+  const sandbox = createSandbox(mockEnv);
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  // Switch codec to vorbis320
+  vm.runInContext(`
+    const codecRadios = document.querySelectorAll('input[name="sci-codec"]');
+    codecRadios.forEach(r => { r.checked = (r.value === 'vorbis320'); });
+    sciSetup.codec = 'vorbis320';
+    updatePreRegStats();
+  `, sandbox);
+
+  const cards = mockEnv.mockDocument.querySelectorAll('.codec-options .option-card');
+  const vorbisCard = cards.find(c => c.dataset.codec === 'vorbis320');
+  const aacCard = cards.find(c => c.dataset.codec === 'aac256');
+
+  assert(vorbisCard, 'vorbis320 option card must exist in codec cards');
+  assert(vorbisCard.classList.contains('active'), 'vorbis320 card must have active class when selected');
+  assert(!aacCard.classList.contains('active'), 'aac256 card must not have active class when vorbis320 is selected');
+  assert.strictEqual(vm.runInContext('sciSetup.codec', sandbox), 'vorbis320', 'sciSetup.codec must be vorbis320');
+});
+
+await testAsync('Scientific test launch with vorbis320 properly loads track.files.vorbis320 into ScientificAudioEngine.loadTrack', async () => {
+  const mockEnv = createMockEnvironment();
+  const sandbox = createSandbox(mockEnv);
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  let loadedFlac = null;
+  let loadedLossy = null;
+  const origLoadTrack = ScientificAudioEngine.loadTrack;
+  ScientificAudioEngine.loadTrack = (flacUrl, lossyUrl) => {
+    loadedFlac = flacUrl;
+    loadedLossy = lossyUrl;
+    return Promise.resolve();
+  };
+
+  try {
+    await vm.runInContext(`
+      const codecRadios = document.querySelectorAll('input[name="sci-codec"]');
+      codecRadios.forEach(r => { r.checked = (r.value === 'vorbis320'); });
+      sciSetup.codec = 'vorbis320';
+      sciSetup.trackCount = 5;
+      sciSetup.trialsPerTrack = 10;
+      startScientificTest();
+    `, sandbox);
+
+    const currentTrack = vm.runInContext('sciTestState.tracks[0]', sandbox);
+    assert(currentTrack, 'Track 0 must be defined in sciTestState');
+    assert.strictEqual(vm.runInContext('sciTestState.codec', sandbox), 'vorbis320', 'sciTestState.codec must be vorbis320');
+    assert.strictEqual(loadedFlac, currentTrack.files.flac, 'ScientificAudioEngine.loadTrack flac argument must match track.files.flac');
+    assert.strictEqual(loadedLossy, currentTrack.files.vorbis320, 'ScientificAudioEngine.loadTrack lossy argument must match track.files.vorbis320');
+    assert(loadedLossy && loadedLossy.includes('vorbis320'), 'Vorbis audio file should contain vorbis320 in its path');
+  } finally {
+    ScientificAudioEngine.loadTrack = origLoadTrack;
+  }
+});
+
+test('Standard Mode initializes 5 mystery streams per track and generates results tally containing vorbis320', () => {
+  const mockEnv = createMockEnvironment();
+  const { domNodes } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  // Initialize Standard Mode
+  vm.runInContext(`
+    switchView(VIEWS.STANDARD);
+    S = makeState(false);
+  `, sandbox);
+
+  const state = vm.runInContext('S', sandbox);
+  assert(state && state.qs, 'Standard mode state must have questions array');
+  assert.strictEqual(state.qs.length, 8, 'Standard mode must have 8 tracks');
+
+  // Verify each track has 5 streams and 5-element arrays
+  state.qs.forEach((q, idx) => {
+    assert.strictEqual(q.order.length, 5, `Track ${idx} must have 5 mystery streams in q.order`);
+    assert(q.order.includes('vorbis320'), `Track ${idx} q.order must include vorbis320`);
+    assert.strictEqual(q.heardT.length, 5, `Track ${idx} q.heardT must have 5 elements`);
+    assert.strictEqual(q.load.length, 5, `Track ${idx} q.load must have 5 elements`);
+    assert.strictEqual(q.posS.length, 5, `Track ${idx} q.posS must have 5 elements`);
+  });
+
+  // Simulate locking all tracks to generate results tally
+  vm.runInContext(`
+    S.qs.forEach((q, idx) => {
+      q.locked = true;
+      const vorbisIdx = q.order.indexOf('vorbis320');
+      q.pick = (idx % 2 === 0 && vorbisIdx !== -1) ? vorbisIdx : 0;
+    });
+    renderResults();
+  `, sandbox);
+
+  const resultsEl = domNodes.get('results');
+  assert.strictEqual(resultsEl.hidden, false, 'Results element must be visible');
+  assert(resultsEl.innerHTML.includes('Ogg Vorbis 320 kbps') || resultsEl.innerHTML.includes('Vorbis 320'), 'Results tally must include Vorbis 320');
+  assert(resultsEl.innerHTML.includes('Spotify Premium') || resultsEl.innerHTML.includes('Spotify'), 'Results tally must include Vorbis service');
 });
 
 test('Trial workflow: engagement gate locks choices until threshold, unlocks at >= 2.0s', () => {
