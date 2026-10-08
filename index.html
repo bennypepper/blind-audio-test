@@ -103,7 +103,7 @@
           <div class="signal-flow">
             <span class="signal-node highlight">Master: CD 16/44.1 FLAC</span>
             <span class="signal-arrow">&rarr;</span>
-            <span class="signal-node">5 Stream Matrix (FLAC &middot; Vorbis &middot; AAC &middot; Opus &middot; MP3)</span>
+            <span class="signal-node">Configurable 2–5 Stream Matrix (Default: 3 Streams &middot; FLAC &middot; Vorbis 320 &middot; Opus 128)</span>
             <span class="signal-arrow">&rarr;</span>
             <span class="signal-node">Sample-Accurate Playhead Sync</span>
             <span class="signal-arrow">&rarr;</span>
@@ -114,11 +114,11 @@
         <div class="bench-spec-grid bench-spec-table">
           <div class="spec-item">
             <span class="spec-label">Methodological Format</span>
-            <span class="spec-val">5-Choice Blind Ranking (MUSHRA-style)</span>
+            <span class="spec-val">Configurable Blind Stream Comparison (Default: 3 Streams)</span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Random Guess Baseline (H₀)</span>
-            <span class="spec-val"><span class="mono-spec">20.0%</span> random guessing baseline</span>
+            <span class="spec-val"><span class="mono-spec">33.3%</span> default baseline (2.7 / 8 tracks)</span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Reference Master</span>
@@ -126,7 +126,7 @@
           </div>
           <div class="spec-item">
             <span class="spec-label">Simulated Encoders</span>
-            <span class="spec-val"><span class="mono-spec">Vorbis 320k</span> &middot; <span class="mono-spec">AAC 256k</span> &middot; <span class="mono-spec">Opus 128k</span> &middot; <span class="mono-spec">MP3 128k</span></span>
+            <span class="spec-val"><span class="mono-spec">FLAC Master</span> + selectable <span class="mono-spec">Vorbis 320k</span> &middot; <span class="mono-spec">Opus 128k</span> &middot; <span class="mono-spec">AAC 256k</span> &middot; <span class="mono-spec">MP3 128k</span></span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Test Battery</span>
@@ -252,7 +252,7 @@
      ========================================================================== -->
 <main id="view-standard" class="page view" hidden>
   <h1>Can you hear the difference?</h1>
-  <p class="lede">Each song comes in four versions: one lossless, three compressed the way popular streaming services do it. Switch between them while the song plays and pick the one with the highest quality.</p>
+  <p class="lede">Each song presents mystery audio streams: one lossless CD master, and compressed versions from popular streaming services. By default, test Spotify 320 kbps and YouTube Opus 128 kbps against FLAC, or customize the active streams below.</p>
 
   <div class="touch-note" id="touch-note" role="note">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
@@ -280,12 +280,24 @@
         </div>
         <div class="tip">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <div><b>Keep volume steady</b><span>Pure random guessing averages 2 out of 8 (25% chance level).</span></div>
+          <div><b>Keep volume steady</b><span id="tip-chance-text">With 3 streams, pure random guessing averages 2.7 out of 8 (33% chance level).</span></div>
         </div>
       </div>
       <div class="tips-foot"><button class="btn btn-primary btn-sm" id="tips-ok">Got it</button></div>
     </div>
   </details>
+
+  <!-- Standard Mode Stream Configurator -->
+  <div class="std-stream-bar" id="std-stream-bar">
+    <div class="std-stream-header">
+      <div class="std-stream-title-group">
+        <span class="std-stream-title">Streams to Compare</span>
+        <span class="std-stream-badge" id="std-stream-badge">3 of 5 active &middot; 33.3% chance per track</span>
+      </div>
+      <button type="button" class="btn btn-quiet btn-xs" id="btn-std-reset-streams" title="Reset to default 3 streams (FLAC, Vorbis 320, Opus 128)">Reset to Default</button>
+    </div>
+    <div class="std-stream-chips" id="std-stream-chips" role="group" aria-label="Select audio streams to compare"></div>
+  </div>
 
   <h2 class="sr-only">Songs</h2>
   <ol class="panel" id="qlist"></ol>
@@ -746,7 +758,7 @@
         A rapid multi-tier streaming challenge designed to test your audio gear and auditory acuity across common audio formats.
       </div>
       <h4>How the Standard Challenge Works</h4>
-      <p>1. <b>Multiple Encoded Streams:</b> Each track presents up to 5 mystery audio streams. Exactly one is the uncompressed CD-quality master (16-bit / 44.1 kHz FLAC). The remaining streams are compressed lossy versions: Ogg Vorbis 320 kbps, AAC 256 kbps, Opus 128 kbps, and MP3 128 kbps.</p>
+      <p>1. <b>Configurable Mystery Streams:</b> By default, each track presents 3 mystery audio streams (inspired by the classic NPR listening benchmark): uncompressed CD FLAC master, Spotify Premium Vorbis 320 kbps, and YouTube Opus 128 kbps. You can also customize active streams (adding Apple AAC 256 kbps or legacy MP3 128 kbps) with the stream selector chips.</p>
       <p>2. <b>Sample-Accurate Playhead Sync:</b> Toggle "Keep playhead in sync" to maintain your playback position when switching between samples, letting you contrast the exact same millisecond of music.</p>
       <p>3. <b>Interactive Waveform:</b> Click or drag anywhere along the waveform to scrub directly to transient-dense musical sections (drum intros, cymbals, or vocal passages).</p>
       <p>4. <b>Identify &amp; Reveal:</b> Select which sample you believe is the uncompressed lossless FLAC master for each song, then click <b>Reveal Results</b> at the end of the test to calculate your detection score against chance probability.</p>
@@ -811,8 +823,10 @@
 <script>
   /* Data (loaded from tracks-catalog.js) */
   const CODECS = (typeof window !== 'undefined' && window.CODECS) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.CODECS : {});
-  const KEYS = (typeof window !== 'undefined' && window.KEYS) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.KEYS : ['flac', 'aac256', 'opus128', 'mp3128']);
+  const KEYS = (typeof window !== 'undefined' && window.KEYS) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.KEYS : ['flac', 'vorbis320', 'aac256', 'opus128', 'mp3128']);
   const SONG_CATEGORIES = (typeof window !== 'undefined' && window.SONG_CATEGORIES) || (typeof TracksCatalog !== 'undefined' ? TracksCatalog.SONG_CATEGORIES : []);
+  const DEFAULT_STD_KEYS = ['flac', 'vorbis320', 'opus128'];
+  let standardActiveKeys = [...DEFAULT_STD_KEYS];
 
   const I = {
     play:   '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>',
@@ -1124,22 +1138,65 @@
       return cat.contenders[cIdx];
     });
 
+    const activeKeys = [...standardActiveKeys];
+
     const qs = activeSongs.map((s, i) => ({
       ...s,
       i,
-      order: shuffle(KEYS),
+      order: shuffle(activeKeys),
       pick: null,
       locked: false,
       heard: new Set(),
-      heardT: KEYS.map(() => 0),
-      load: KEYS.map(() => 'ready'),
+      heardT: activeKeys.map(() => 0),
+      load: activeKeys.map(() => 'ready'),
       pos: 0,
-      posS: KEYS.map(() => 0),
+      posS: activeKeys.map(() => 0),
       cur: null,
       waveBars: getWaveBars(s.id)
     }));
 
     return { qs, open: 0, playing: false, sync: true };
+  }
+
+  function renderStandardStreamBar() {
+    const bar = $('#std-stream-bar');
+    if (!bar) return;
+    const badge = $('#std-stream-badge');
+    const resetBtn = $('#btn-std-reset-streams');
+    const chipsContainer = $('#std-stream-chips');
+    const tipChanceText = $('#tip-chance-text');
+    if (!chipsContainer) return;
+
+    const count = standardActiveKeys.length;
+    const pct = (100 / count).toFixed(1);
+    const avgChance = (8 / count).toFixed(1);
+    if (badge) {
+      badge.textContent = `${count} of ${KEYS.length} active \u2022 ${pct}% chance per track`;
+    }
+    if (tipChanceText) {
+      tipChanceText.textContent = `With ${count} streams, pure random guessing averages ${avgChance} out of 8 (${Math.round(100 / count)}% chance level).`;
+    }
+    if (resetBtn) {
+      const isDefault = standardActiveKeys.length === DEFAULT_STD_KEYS.length &&
+        DEFAULT_STD_KEYS.every(k => standardActiveKeys.includes(k));
+      resetBtn.style.opacity = isDefault ? '0.4' : '1';
+      resetBtn.disabled = isDefault;
+    }
+
+    chipsContainer.innerHTML = KEYS.map(k => {
+      const c = CODECS[k];
+      const isActive = standardActiveKeys.includes(k);
+      const isLocked = k === 'flac';
+      const icon = isActive ? I.check : '<span class="plus-icon">+</span>';
+      const cls = ['std-chip', isActive ? 'active' : '', isLocked ? 'locked' : ''].filter(Boolean).join(' ');
+      const ariaLabel = isLocked
+        ? `${c.name} (${c.service}) - Reference master (always active)`
+        : `${isActive ? 'Remove' : 'Add'} ${c.name} (${c.service})`;
+      return `<button type="button" class="${cls}" data-codec="${k}" aria-pressed="${isActive}" ${isLocked ? 'aria-disabled="true" title="Lossless master is the reference target"' : ''} aria-label="${ariaLabel}">
+        <span class="chip-icon">${icon}</span>
+        <span class="chip-label"><b>${c.name}</b><span class="chip-service">${c.service}</span></span>
+      </button>`;
+    }).join('');
   }
 
   function sampleHTML(q, s) {
@@ -1264,9 +1321,12 @@
     if (!allDone) { r.hidden = true; r.innerHTML = ''; return; }
     r.hidden = false;
 
+    const activeKeys = [...standardActiveKeys];
+    const choiceCount = activeKeys.length;
     const score = S.qs.filter(q => q.order[q.pick] === 'flac').length;
     const pct = Math.round(score / 8 * 100);
-    const chanceScore = Math.round(8 / KEYS.length);
+    const chanceScore = Math.round(8 / choiceCount);
+    const chancePct = Math.round(100 / choiceCount);
 
     const cells = Array.from({ length: 9 }, (_, i) => {
       const isYou = i === score, isChance = i === chanceScore, upto = i < score;
@@ -1277,10 +1337,10 @@
     let verdict;
     if (score >= 7) {
       verdict = `<b>Exceptional critical listening.</b> You correctly spotted the uncompressed master in ${score} of 8 tracks. Your playback setup and critical ear distinguish subtle high-frequency nuance with high confidence.`;
-    } else if (score >= 4) {
-      verdict = `<b>Sharp critical listener.</b> You scored ${score} of 8, reliably identifying lower-bitrate compression artifacts like MP3, while finding modern 256 kbps AAC close to the lossless master.`;
+    } else if (score >= (choiceCount <= 3 ? 5 : 4)) {
+      verdict = `<b>Sharp critical listener.</b> You scored ${score} of 8 (${pct}%), reliably distinguishing lossy compression artifacts from the uncompressed master beyond chance probability.`;
     } else {
-      verdict = `<b>Natural human hearing.</b> You scored ${score} of 8 (baseline random guessing is ${chanceScore} of 8). Modern audio codecs like 320 kbps Vorbis and 256 kbps AAC are designed to be perceptually transparent, discarding frequencies inaudible under normal conditions.`;
+      verdict = `<b>Natural human hearing.</b> You scored ${score} of 8 (baseline random guessing is ${(8 / choiceCount).toFixed(1)} of 8, or ${chancePct}% per song). Modern lossy audio codecs are designed to be perceptually transparent, discarding frequencies inaudible under normal conditions.`;
     }
 
     const songsHTML = S.qs.map(q => {
@@ -1292,10 +1352,10 @@
       </li>`;
     }).join('');
 
-    const tally = Object.fromEntries(KEYS.map(k => [k, 0]));
-    S.qs.forEach(q => { tally[q.order[q.pick]]++; });
-    const tallyHTML = KEYS.map(k => {
-      const c = CODECS[k], n = tally[k], w = (n / 8 * 100).toFixed(1);
+    const tally = Object.fromEntries(activeKeys.map(k => [k, 0]));
+    S.qs.forEach(q => { if (q.pick !== null && q.order[q.pick]) tally[q.order[q.pick]]++; });
+    const tallyHTML = activeKeys.map(k => {
+      const c = CODECS[k], n = tally[k] || 0, w = (n / 8 * 100).toFixed(1);
       return `<li>
         <div class="t-top"><b>${c.name} (${c.service})</b><span>${n} of 8 (${w}%)</span></div>
         <div class="t-bar"><i class="${k === 'flac' ? 'lossless' : ''}" style="width:${w}%"></i></div>
@@ -1304,11 +1364,11 @@
 
     r.innerHTML = `
       <h2 id="r-title">You identified the lossless version in ${score} of 8 songs (${pct}%)</h2>
-      <p class="r-sub">Chance level is ${chanceScore} of 8 (${Math.round(100 / KEYS.length)}% on a ${KEYS.length}-choice test).</p>
+      <p class="r-sub">Chance level is ${(8 / choiceCount).toFixed(1)} of 8 (${chancePct}% on a ${choiceCount}-choice test).</p>
       <div class="scale">${cells}</div>
       <ul class="legend">
         <li><span class="lg you"></span> Your score (${score}/8)</li>
-        <li><span class="lg chance"></span> Pure chance (${chanceScore}/8)</li>
+        <li><span class="lg chance"></span> Pure chance (~${chanceScore}/8)</li>
       </ul>
       <div class="verdict">${verdict}</div>
       <div class="r-grid">
@@ -1324,6 +1384,7 @@
 
   function render() {
     if (!S) return;
+    renderStandardStreamBar();
     const a = document.activeElement;
     const fid = a && a.dataset ? a.dataset.fid : null;
     $('#qlist').innerHTML = S.qs.map(qHTML).join('');
@@ -1562,6 +1623,56 @@
     localStorage.setItem('blind_test_tips_dismissed', 'true');
     $('#tips summary').focus();
   });
+
+  const streamChipsContainer = $('#std-stream-chips');
+  if (streamChipsContainer) {
+    streamChipsContainer.addEventListener('click', e => {
+      const btn = e.target.closest('.std-chip');
+      if (!btn) return;
+      const codec = btn.dataset.codec;
+      if (!codec || codec === 'flac') {
+        announce('CD 16/44.1 FLAC is the reference lossless master and is always active.');
+        return;
+      }
+
+      if (S && S.qs.some(q => q.locked)) {
+        if (!confirm('Changing audio streams will reset your current test answers. Continue?')) {
+          return;
+        }
+      }
+
+      if (standardActiveKeys.includes(codec)) {
+        if (standardActiveKeys.length <= 2) {
+          announce('At least one lossy format is required to compare against the FLAC master.');
+          return;
+        }
+        standardActiveKeys = standardActiveKeys.filter(k => k !== codec);
+      } else {
+        standardActiveKeys.push(codec);
+      }
+
+      renderStandardStreamBar();
+      S = makeState(false);
+      render();
+      announce(`Updated streams. Now comparing ${standardActiveKeys.length} versions per song.`);
+    });
+  }
+
+  const resetStreamsBtn = $('#btn-std-reset-streams');
+  if (resetStreamsBtn) {
+    resetStreamsBtn.addEventListener('click', () => {
+      if (S && S.qs.some(q => q.locked)) {
+        if (!confirm('Resetting to default 3 streams will reset your current test answers. Continue?')) {
+          return;
+        }
+      }
+      standardActiveKeys = [...DEFAULT_STD_KEYS];
+      renderStandardStreamBar();
+      S = makeState(false);
+      render();
+      announce('Reset stream comparison to default 3 streams (FLAC, Vorbis 320, Opus 128).');
+    });
+  }
 
   /* ==========================================================================
      SCIENTIFIC ABX MODE STATE & LOGIC

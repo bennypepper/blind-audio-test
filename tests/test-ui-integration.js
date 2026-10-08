@@ -150,11 +150,13 @@ test('index.html Scientific Setup contains comparisons, batteries, presets, and 
   });
 });
 
-test('index.html contains Vorbis 320 options and 5-stream matrix across Mode Select and Setup', () => {
+test('index.html contains Vorbis 320 options and stream matrix across Mode Select and Setup', () => {
   assert(indexHTML.includes('value="vorbis320"'), 'index.html must contain value="vorbis320"');
   assert(indexHTML.includes('data-codec="vorbis320"'), 'index.html must contain data-codec="vorbis320"');
   assert(indexHTML.includes('Spotify Vorbis 320 kbps'), 'index.html must contain Spotify Vorbis 320 kbps');
-  assert(indexHTML.includes('5 Stream Matrix'), 'index.html Mode Select portal must contain 5 Stream Matrix');
+  assert(indexHTML.includes('5 Stream Matrix') || indexHTML.includes('Stream Matrix'), 'index.html Mode Select portal must contain Stream Matrix');
+  assert(indexHTML.includes('id="std-stream-bar"'), 'index.html must contain std-stream-bar');
+  assert(indexHTML.includes('id="std-stream-chips"'), 'index.html must contain std-stream-chips');
 });
 
 test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net layout', () => {
@@ -457,7 +459,8 @@ function createMockEnvironment() {
     'brand-home', 'dlg', 'dlg-switch-mode', 'dlg-instructions', 'dlg-switch-cancel', 'dlg-switch-ok',
     'dlg-cancel', 'dlg-ok', 'dlg-text', 'dlg-inst-close', 'tips', 'tips-ok', 'live', 'qlist', 'results',
     'btn-theme-toggle',
-    'tab-bench-standard', 'tab-bench-scientific', 'panel-bench-standard', 'panel-bench-scientific'
+    'tab-bench-standard', 'tab-bench-scientific', 'panel-bench-standard', 'panel-bench-scientific',
+    'std-stream-bar', 'std-stream-badge', 'btn-std-reset-streams', 'std-stream-chips', 'tip-chance-text'
   ];
 
   requiredIds.forEach(id => getOrCreate(id));
@@ -825,7 +828,7 @@ await testAsync('Scientific test launch with vorbis320 properly loads track.file
   }
 });
 
-test('Standard Mode initializes 5 mystery streams per track and generates results tally containing vorbis320', () => {
+test('Standard Mode initializes with default 3 streams (FLAC, Vorbis 320, Opus 128) and dynamically adapts to custom stream selection', () => {
   const mockEnv = createMockEnvironment();
   const { domNodes } = mockEnv;
   const sandbox = createSandbox(mockEnv);
@@ -843,14 +846,34 @@ test('Standard Mode initializes 5 mystery streams per track and generates result
   assert(state && state.qs, 'Standard mode state must have questions array');
   assert.strictEqual(state.qs.length, 8, 'Standard mode must have 8 tracks');
 
-  // Verify each track has 5 streams and 5-element arrays
+  // Verify default 3 streams per track (FLAC, Vorbis 320, Opus 128)
   state.qs.forEach((q, idx) => {
-    assert.strictEqual(q.order.length, 5, `Track ${idx} must have 5 mystery streams in q.order`);
+    assert.strictEqual(q.order.length, 3, `Track ${idx} must default to 3 mystery streams in q.order`);
+    assert(q.order.includes('flac'), `Track ${idx} q.order must include flac`);
     assert(q.order.includes('vorbis320'), `Track ${idx} q.order must include vorbis320`);
-    assert.strictEqual(q.heardT.length, 5, `Track ${idx} q.heardT must have 5 elements`);
-    assert.strictEqual(q.load.length, 5, `Track ${idx} q.load must have 5 elements`);
-    assert.strictEqual(q.posS.length, 5, `Track ${idx} q.posS must have 5 elements`);
+    assert(q.order.includes('opus128'), `Track ${idx} q.order must include opus128`);
+    assert.strictEqual(q.heardT.length, 3, `Track ${idx} q.heardT must have 3 elements`);
+    assert.strictEqual(q.load.length, 3, `Track ${idx} q.load must have 3 elements`);
+    assert.strictEqual(q.posS.length, 3, `Track ${idx} q.posS must have 3 elements`);
   });
+
+  // Verify dynamic stream customization: add a 4th stream (aac256)
+  vm.runInContext(`
+    standardActiveKeys.push('aac256');
+    S = makeState(false);
+  `, sandbox);
+
+  const state4 = vm.runInContext('S', sandbox);
+  assert.strictEqual(state4.qs[0].order.length, 4, 'Track 0 must have 4 streams after adding aac256');
+  assert(state4.qs[0].order.includes('aac256'), 'Track 0 must contain aac256');
+
+  // Verify expanding to all 5 streams
+  vm.runInContext(`
+    standardActiveKeys.push('mp3128');
+    S = makeState(false);
+  `, sandbox);
+  const state5 = vm.runInContext('S', sandbox);
+  assert.strictEqual(state5.qs[0].order.length, 5, 'Track 0 must have 5 streams after adding mp3128');
 
   // Simulate locking all tracks to generate results tally
   vm.runInContext(`
