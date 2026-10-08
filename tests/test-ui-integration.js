@@ -859,13 +859,23 @@ test('Standard Mode initializes with default 3 streams (FLAC, Vorbis 320, Opus 1
 
   // Verify dynamic stream customization: add a 4th stream (aac256)
   vm.runInContext(`
+    S.open = 3;
+    audioMap.set('0-0', new Audio());
     standardActiveKeys.push('aac256');
     S = makeState(false);
   `, sandbox);
 
   const state4 = vm.runInContext('S', sandbox);
+  assert.strictEqual(state4.open, 3, 'Open accordion card index must be preserved when updating streams');
+  const audioMapSize = vm.runInContext('audioMap.size', sandbox);
+  assert.strictEqual(audioMapSize, 0, 'audioMap cache must be completely cleared when updating streams');
   assert.strictEqual(state4.qs[0].order.length, 4, 'Track 0 must have 4 streams after adding aac256');
   assert(state4.qs[0].order.includes('aac256'), 'Track 0 must contain aac256');
+
+  // Verify independent shuffling across tracks
+  const serializedOrders = state4.qs.map(q => q.order.join(','));
+  const uniqueOrders = new Set(serializedOrders);
+  assert(uniqueOrders.size > 1, 'Different tracks must have independently shuffled stream orders');
 
   // Verify expanding to all 5 streams
   vm.runInContext(`
@@ -874,6 +884,10 @@ test('Standard Mode initializes with default 3 streams (FLAC, Vorbis 320, Opus 1
   `, sandbox);
   const state5 = vm.runInContext('S', sandbox);
   assert.strictEqual(state5.qs[0].order.length, 5, 'Track 0 must have 5 streams after adding mp3128');
+  state5.qs.forEach((q, idx) => {
+    assert.strictEqual(q.order.length, 5, `Track ${idx} must contain 5 shuffled streams`);
+    assert(q.order.includes('mp3128'), `Track ${idx} must include mp3128`);
+  });
 
   // Simulate locking all tracks to generate results tally
   vm.runInContext(`
