@@ -991,22 +991,22 @@
   .panel-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
   .panel-header h3 { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
   .panel-sub { font-size: 13px; color: var(--muted); }
-  .gate-message { font-size: 13.5px; font-weight: 600; color: var(--stat-box-hdr); }
-  .gate-message.unlocked { color: var(--good-ink); }
+  .gate-message { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .gate-message.unlocked { color: var(--ink); font-weight: 600; }
 
   .listen-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .source-btn {
     background: var(--surface);
-    border: 2px solid var(--line);
+    border: 1px solid var(--line);
     border-radius: var(--r-row);
-    padding: 14px 18px;
+    padding: 24px 18px 22px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     position: relative;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background 0.15s, border-color 0.15s;
   }
   .source-btn:hover { border-color: var(--line-strong); background: var(--soft); }
   .source-btn:focus-visible {
@@ -1019,60 +1019,21 @@
   .source-btn.active {
     border-color: var(--accent);
     background: var(--accent-soft);
-    box-shadow: 0 0 0 1px var(--accent);
   }
   .source-btn .source-badge {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: var(--soft);
     display: grid;
     place-items: center;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 800;
     color: var(--ink);
-    transition: all 0.15s;
+    transition: background 0.15s, color 0.15s;
   }
   .source-btn.active .source-badge { background: var(--accent); color: #fff; }
-  .source-btn .source-title { font-weight: 700; font-size: 15px; }
-  .source-gate {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--muted);
-    background: var(--soft);
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-  }
-  .source-gate.ok { background: var(--good-soft); color: var(--good-ink); font-weight: 600; }
-  .gate-progress-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--line);
-    border-bottom-left-radius: calc(var(--r-row) - 2px);
-    border-bottom-right-radius: calc(var(--r-row) - 2px);
-    overflow: hidden;
-  }
-  .gate-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--accent);
-    transition: width 0.05s linear;
-  }
-  .source-btn.active .gate-progress-fill {
-    background: var(--audition);
-  }
-  .source-gate.ok + .gate-progress-bar .gate-progress-fill,
-  .gate-progress-bar.ok .gate-progress-fill {
-    background: var(--good);
-    width: 100% !important;
-  }
+  .source-btn .source-title { font-weight: 700; font-size: 15px; color: var(--ink); letter-spacing: -0.01em; }
   .hotkey-hint {
     position: absolute;
     top: 8px;
@@ -1089,7 +1050,7 @@
   .choose-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .choose-btn {
     min-height: 56px;
-    border: 2px solid var(--line-strong);
+    border: 1px solid var(--line-strong);
     border-radius: var(--r-row);
     background: var(--surface);
     font-size: 17px;
@@ -1110,7 +1071,7 @@
   .choose-btn:focus:not(:focus-visible) {
     outline: none;
   }
-  .choose-btn.active { border-color: var(--accent); background: var(--accent); color: #FFFFFF; box-shadow: 0 4px 14px rgba(229, 87, 34, 0.35); }
+  .choose-btn.active { border-color: var(--accent); background: var(--accent); color: #FFFFFF; }
   .choose-btn:disabled { opacity: 0.45; cursor: not-allowed; background: var(--soft); border-color: var(--line); }
 
   .sci-commit-panel { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }

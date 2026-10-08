@@ -180,12 +180,6 @@ test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net 
     'id="btn-source-a"',
     'id="btn-source-x"',
     'id="btn-source-b"',
-    'id="gate-bar-a"',
-    'id="gate-bar-x"',
-    'id="gate-bar-b"',
-    'id="gate-a"',
-    'id="gate-x"',
-    'id="gate-b"',
     'id="gate-message"',
     'id="btn-choose-a"',
     'id="btn-choose-b"',
@@ -196,7 +190,9 @@ test('index.html Scientific Trial contains strictly modeled abx.digitalfeed.net 
     assert(indexHTML.includes(el), `Scientific trial view must contain ${el}`);
   });
 
-  // Verify unbiased listen buttons (no codec information to prevent expectation bias)
+  // Verify simplified listen buttons: no counters, no green indicator bars, no biasing subtitles
+  assert(!indexHTML.includes('source-gate'), 'Must not contain cluttered timer counter elements on listen buttons');
+  assert(!indexHTML.includes('gate-progress-bar'), 'Must not contain bottom progress indicator bars on listen buttons');
   assert(!indexHTML.includes('source-sub'), 'Must not contain biasing codec subtitle elements on listen buttons');
   assert(!indexHTML.includes('id="source-b-sub"'), 'Must not contain biasing codec subtitle element on Source B button');
 });
@@ -449,7 +445,7 @@ function createMockEnvironment() {
     'sci-wave-bg', 'sci-wave-fill', 'sci-wave', 'sci-time',
     'btn-sci-rewind', 'btn-sci-seek-back', 'btn-sci-seek-fwd', 'btn-sci-stop',
     'btn-source-a', 'btn-source-x', 'btn-source-b',
-    'gate-a', 'gate-x', 'gate-b', 'gate-message',
+    'gate-message',
     'btn-choose-a', 'btn-choose-b', 'btn-commit-next', 'commit-hint',
     'rest-completed-track', 'rest-seconds', 'btn-rest-continue',
     'sci-verdict-banner', 'sci-verdict-tag', 'sci-verdict-title', 'sci-verdict-exp',
@@ -472,16 +468,6 @@ function createMockEnvironment() {
   const moonIcon = new MockElement('SVG');
   moonIcon.classList.add('icon-moon');
   themeToggle.children.push(sunIcon, moonIcon);
-
-  // Gate child elements (gate-time and gate-status)
-  ['a', 'x', 'b'].forEach(k => {
-    const gate = getOrCreate(`gate-${k}`);
-    const timeEl = new MockElement('SPAN');
-    timeEl.classList.add('gate-time');
-    const statusEl = new MockElement('SPAN');
-    statusEl.classList.add('gate-status');
-    gate.children.push(timeEl, statusEl);
-  });
 
   // Setup cards and radio inputs
   const codecCards = [
