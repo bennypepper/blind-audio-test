@@ -74,7 +74,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="10" width="3" height="4" rx="1"/><rect x="8" y="6" width="3" height="12" rx="1"/><rect x="13" y="3" width="3" height="18" rx="1"/><rect x="18" y="8" width="3" height="8" rx="1"/></svg>
         Standard Listening Challenge
       </span>
-      <span class="bench-tab-sub">4-Choice Listening Test</span>
+      <span class="bench-tab-sub">5-Choice Listening Test</span>
     </button>
     <button class="bench-tab" role="tab" id="tab-bench-scientific" aria-selected="false" aria-controls="panel-bench-scientific">
       <span class="bench-tab-title">
@@ -103,7 +103,7 @@
           <div class="signal-flow">
             <span class="signal-node highlight">Master: CD 16/44.1 FLAC</span>
             <span class="signal-arrow">&rarr;</span>
-            <span class="signal-node">4 Stream Matrix (FLAC &middot; AAC &middot; Opus &middot; MP3)</span>
+            <span class="signal-node">5 Stream Matrix (FLAC &middot; Vorbis &middot; AAC &middot; Opus &middot; MP3)</span>
             <span class="signal-arrow">&rarr;</span>
             <span class="signal-node">Sample-Accurate Playhead Sync</span>
             <span class="signal-arrow">&rarr;</span>
@@ -114,11 +114,11 @@
         <div class="bench-spec-grid bench-spec-table">
           <div class="spec-item">
             <span class="spec-label">Methodological Format</span>
-            <span class="spec-val">4-Choice Blind Ranking (MUSHRA-style)</span>
+            <span class="spec-val">5-Choice Blind Ranking (MUSHRA-style)</span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Random Guess Baseline (H₀)</span>
-            <span class="spec-val"><span class="mono-spec">25.0%</span> random guessing baseline</span>
+            <span class="spec-val"><span class="mono-spec">20.0%</span> random guessing baseline</span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Reference Master</span>
@@ -126,7 +126,7 @@
           </div>
           <div class="spec-item">
             <span class="spec-label">Simulated Encoders</span>
-            <span class="spec-val"><span class="mono-spec">AAC 256k</span> &middot; <span class="mono-spec">Opus 128k</span> &middot; <span class="mono-spec">MP3 128k</span></span>
+            <span class="spec-val"><span class="mono-spec">Vorbis 320k</span> &middot; <span class="mono-spec">AAC 256k</span> &middot; <span class="mono-spec">Opus 128k</span> &middot; <span class="mono-spec">MP3 128k</span></span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Test Battery</span>
@@ -205,7 +205,7 @@
           </div>
           <div class="spec-item">
             <span class="spec-label">Comparison Target</span>
-            <span class="spec-val">Configurable: <span class="mono-spec">AAC 256k</span>, <span class="mono-spec">Opus 128k</span>, <span class="mono-spec">MP3 128k</span></span>
+            <span class="spec-val">Configurable: <span class="mono-spec">Vorbis 320k</span>, <span class="mono-spec">AAC 256k</span>, <span class="mono-spec">Opus 128k</span>, <span class="mono-spec">MP3 128k</span></span>
           </div>
           <div class="spec-item">
             <span class="spec-label">Test Battery</span>
@@ -317,7 +317,7 @@
           <div class="explainer-badge">B</div>
           <div>
             <b>Source B (Lossy Target)</b>
-            <p>Selected lossy encoded stream (AAC 256k, Opus 128k, or MP3 128k).</p>
+            <p>Selected lossy encoded stream (Vorbis 320k, AAC 256k, Opus 128k, or MP3 128k).</p>
           </div>
         </div>
         <div class="explainer-item">
@@ -337,6 +337,13 @@
         <h3>1. Select Codec Comparison</h3>
         <p class="form-sub">Compare CD 16/44.1 FLAC master against:</p>
         <div class="codec-options" role="radiogroup" aria-label="Codec Comparison">
+          <label class="option-card" data-codec="vorbis320">
+            <input type="radio" name="sci-codec" value="vorbis320">
+            <div class="opt-body">
+              <span class="opt-title">Spotify Vorbis 320 kbps</span>
+              <span class="opt-desc">Spotify Premium highest lossy setting. High-bitrate perceptual coding with subtle high-frequency smoothing.</span>
+            </div>
+          </label>
           <label class="option-card active" data-codec="aac256">
             <input type="radio" name="sci-codec" value="aac256" checked>
             <div class="opt-body">
@@ -739,7 +746,7 @@
         A rapid multi-tier streaming challenge designed to test your audio gear and auditory acuity across common audio formats.
       </div>
       <h4>How the Standard Challenge Works</h4>
-      <p>1. <b>Multiple Encoded Streams:</b> Each track presents up to 4 mystery audio streams. Exactly one is the uncompressed CD-quality master (16-bit / 44.1 kHz FLAC). The remaining streams are compressed lossy versions: AAC 256 kbps, Opus 128 kbps, and MP3 128 kbps.</p>
+      <p>1. <b>Multiple Encoded Streams:</b> Each track presents up to 5 mystery audio streams. Exactly one is the uncompressed CD-quality master (16-bit / 44.1 kHz FLAC). The remaining streams are compressed lossy versions: Ogg Vorbis 320 kbps, AAC 256 kbps, Opus 128 kbps, and MP3 128 kbps.</p>
       <p>2. <b>Sample-Accurate Playhead Sync:</b> Toggle "Keep playhead in sync" to maintain your playback position when switching between samples, letting you contrast the exact same millisecond of music.</p>
       <p>3. <b>Interactive Waveform:</b> Click or drag anywhere along the waveform to scrub directly to transient-dense musical sections (drum intros, cymbals, or vocal passages).</p>
       <p>4. <b>Identify &amp; Reveal:</b> Select which sample you believe is the uncompressed lossless FLAC master for each song, then click <b>Reveal Results</b> at the end of the test to calculate your detection score against chance probability.</p>
@@ -1124,10 +1131,10 @@
       pick: null,
       locked: false,
       heard: new Set(),
-      heardT: [0, 0, 0, 0],
-      load: ['ready', 'ready', 'ready', 'ready'],
+      heardT: KEYS.map(() => 0),
+      load: KEYS.map(() => 'ready'),
       pos: 0,
-      posS: [0, 0, 0, 0],
+      posS: KEYS.map(() => 0),
       cur: null,
       waveBars: getWaveBars(s.id)
     }));
@@ -1193,8 +1200,8 @@
       foot += `<div class="outcome-row"><button class="btn btn-primary" data-act="next" data-fid="next-${q.i}">${allDone ? 'See results' : 'Next song'}</button></div>`;
     } else {
       const msg = q.pick === null
-        ? `Heard ${q.heard.size} of 4. Listen to each, then pick the one you think is highest quality.`
-        : `Sample ${q.pick + 1} picked. Heard ${q.heard.size} of 4. Click confirm to reveal the answer.`;
+        ? `Heard ${q.heard.size} of ${q.order.length}. Listen to each, then pick the one you think is highest quality.`
+        : `Sample ${q.pick + 1} picked. Heard ${q.heard.size} of ${q.order.length}. Click confirm to reveal the answer.`;
       foot = `<div class="foot"><span class="foot-msg">${msg}</span><button class="btn btn-primary" data-act="lock" data-fid="lock-${q.i}" ${q.pick === null ? 'disabled' : ''}>Confirm pick</button></div>`;
     }
     return `
@@ -1259,9 +1266,10 @@
 
     const score = S.qs.filter(q => q.order[q.pick] === 'flac').length;
     const pct = Math.round(score / 8 * 100);
+    const chanceScore = Math.round(8 / KEYS.length);
 
     const cells = Array.from({ length: 9 }, (_, i) => {
-      const isYou = i === score, isChance = i === 2, upto = i < score;
+      const isYou = i === score, isChance = i === chanceScore, upto = i < score;
       const cls = ['cell', upto ? 'upto' : '', isYou ? 'you' : '', isChance ? 'chance' : ''].filter(Boolean).join(' ');
       return `<div class="${cls}" title="${i} of 8 correct${isChance ? ' (chance level)' : ''}">${i}</div>`;
     }).join('');
@@ -1272,7 +1280,7 @@
     } else if (score >= 4) {
       verdict = `<b>Sharp critical listener.</b> You scored ${score} of 8, reliably identifying lower-bitrate compression artifacts like MP3, while finding modern 256 kbps AAC close to the lossless master.`;
     } else {
-      verdict = `<b>Natural human hearing.</b> You scored ${score} of 8 (baseline random guessing is 2 of 8). Modern audio codecs like 256 kbps AAC and 128 kbps Opus are designed to be perceptually transparent, discarding frequencies inaudible under normal conditions.`;
+      verdict = `<b>Natural human hearing.</b> You scored ${score} of 8 (baseline random guessing is ${chanceScore} of 8). Modern audio codecs like 320 kbps Vorbis and 256 kbps AAC are designed to be perceptually transparent, discarding frequencies inaudible under normal conditions.`;
     }
 
     const songsHTML = S.qs.map(q => {
@@ -1284,7 +1292,7 @@
       </li>`;
     }).join('');
 
-    const tally = { flac: 0, aac256: 0, opus128: 0, mp3128: 0 };
+    const tally = Object.fromEntries(KEYS.map(k => [k, 0]));
     S.qs.forEach(q => { tally[q.order[q.pick]]++; });
     const tallyHTML = KEYS.map(k => {
       const c = CODECS[k], n = tally[k], w = (n / 8 * 100).toFixed(1);
@@ -1296,11 +1304,11 @@
 
     r.innerHTML = `
       <h2 id="r-title">You identified the lossless version in ${score} of 8 songs (${pct}%)</h2>
-      <p class="r-sub">Chance level is 2 of 8 (25% on a 4-choice test).</p>
+      <p class="r-sub">Chance level is ${chanceScore} of 8 (${Math.round(100 / KEYS.length)}% on a ${KEYS.length}-choice test).</p>
       <div class="scale">${cells}</div>
       <ul class="legend">
         <li><span class="lg you"></span> Your score (${score}/8)</li>
-        <li><span class="lg chance"></span> Pure chance (2/8)</li>
+        <li><span class="lg chance"></span> Pure chance (${chanceScore}/8)</li>
       </ul>
       <div class="verdict">${verdict}</div>
       <div class="r-grid">
