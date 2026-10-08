@@ -202,7 +202,7 @@
       }
 
       if (this.audioContext && this.audioContext.state === 'suspended' && typeof this.audioContext.resume === 'function') {
-        this.audioContext.resume().catch(() => {});
+        this.audioContext.resume().catch(err => console.warn('AudioContext resume deferred by browser autoplay policy:', err));
       }
 
       if (this.audioContext && !this.masterGain) {
@@ -237,40 +237,49 @@
      * Helper to decode an audio file from URL or local path into an AudioBuffer.
      * @private
      */
-    async _fetchAndDecode(source) {
+    _fetchAndDecode(source) {
       if (isAudioBuffer(source)) {
-        return source;
+        return Promise.resolve(source);
       }
       if (typeof source !== 'string') {
-        throw new Error('Invalid audio source: expected URL string or AudioBuffer');
+        return Promise.reject(new Error('Invalid audio source: expected URL string or AudioBuffer'));
       }
       if (this.bufferCache.has(source)) {
         return this.bufferCache.get(source);
       }
 
-      let arrayBuffer;
-      if (typeof fetch === 'function') {
-        const response = await fetch(source);
-        if (!response.ok) {
-          throw new Error(`Failed to load audio from ${source}: HTTP ${response.status}`);
+      const decodePromise = (async () => {
+        let arrayBuffer;
+        if (typeof fetch === 'function') {
+          const response = await fetch(source);
+          if (!response.ok) {
+            throw new Error(`Failed to load audio from ${source}: HTTP ${response.status}`);
+          }
+          arrayBuffer = await response.arrayBuffer();
+        } else if (typeof window === 'undefined') {
+          // Node.js local file read fallback
+          const fs = require('fs');
+          const fileData = fs.readFileSync(source);
+          arrayBuffer = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
+        } else {
+          throw new Error('No fetch or file reader available to load audio');
         }
-        arrayBuffer = await response.arrayBuffer();
-      } else if (typeof window === 'undefined') {
-        // Node.js local file read fallback
-        const fs = require('fs');
-        const fileData = fs.readFileSync(source);
-        arrayBuffer = fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength);
-      } else {
-        throw new Error('No fetch or file reader available to load audio');
-      }
 
-      if (!this.audioContext) {
-        this.init();
-      }
+        if (!this.audioContext) {
+          this.init();
+        }
 
-      const decodedBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      this.bufferCache.set(source, decodedBuffer);
-      return decodedBuffer;
+        return await this.audioContext.decodeAudioData(arrayBuffer);
+      })();
+
+      decodePromise.catch(() => {
+        if (this.bufferCache.get(source) === decodePromise) {
+          this.bufferCache.delete(source);
+        }
+      });
+
+      this.bufferCache.set(source, decodePromise);
+      return decodePromise;
     }
 
     /**
@@ -291,11 +300,11 @@
 
       // Clean up previous HTML5 audio elements if present
       if (this.htmlAudioA) {
-        try { this.htmlAudioA.pause(); this.htmlAudioA.src = ''; } catch (e) { /* audio element pause/src reset ignore */ }
+        try { this.htmlAudioA.pause(); this.htmlAudioA.src = ''; } catch (e) { /* Safe: Node test runner or uninitialized DOM element lacking HTMLAudioElement properties */ }
         this.htmlAudioA = null;
       }
       if (this.htmlAudioB) {
-        try { this.htmlAudioB.pause(); this.htmlAudioB.src = ''; } catch (e) { /* audio element pause/src reset ignore */ }
+        try { this.htmlAudioB.pause(); this.htmlAudioB.src = ''; } catch (e) { /* Safe: Node test runner or uninitialized DOM element lacking HTMLAudioElement properties */ }
         this.htmlAudioB = null;
       }
 
@@ -424,9 +433,7 @@
     revealTarget() {
       let target = secretTargets.get(this);
       if (!target) {
-        // If not assigned yet, lazily assign
-        this.assignTrialTarget();
-        target = secretTargets.get(this);
+        throw new Error('Trial target is unassigned. Call assignTrialTarget() before revealing target.');
       }
       return target;
     }
@@ -439,7 +446,10 @@
       if (sourceType === 'A') return this.bufferA;
       if (sourceType === 'B') return this.bufferB;
       if (sourceType === 'X') {
-        const target = this.revealTarget();
+        let target = secretTargets.get(this);
+        if (!target) {
+          throw new Error('Trial target is unassigned. Call assignTrialTarget() before auditioning Source X.');
+        }
         return target === 'A' ? this.bufferA : this.bufferB;
       }
       throw new Error(`Invalid source type: ${sourceType}. Expected 'A', 'B', or 'X'.`);
@@ -500,7 +510,7 @@
       }
 
       if (this.audioContext && this.audioContext.state === 'suspended' && typeof this.audioContext.resume === 'function') {
-        this.audioContext.resume().catch(() => {});
+        this.audioContext.resume().catch(err => console.warn('AudioContext resume deferred by browser autoplay policy:', err));
       }
 
       const now = this._getClockTime();
@@ -532,7 +542,7 @@
         if (incomingAudio) {
           try {
             incomingAudio.currentTime = startOffset;
-          } catch (e) {}
+          } catch (e) { /* Safe: Node test runner or uninitialized DOM element lacking HTMLAudioElement properties */ }
 
           const playPromise = incomingAudio.play();
           if (playPromise !== undefined) {
@@ -669,7 +679,7 @@
           if (activeAudio) {
             try {
               activeAudio.currentTime = clamped;
-            } catch (e) {}
+            } catch (e) { /* Safe: Node test runner or uninitialized DOM element lacking HTMLAudioElement properties */ }
           }
           this.playheadStartTime = now;
           this.playheadStartOffset = clamped;
@@ -717,8 +727,8 @@
       } else {
         this.playheadStartOffset = clamped;
         if (this.mode === 'html5') {
-          if (this.htmlAudioA) try { this.htmlAudioA.currentTime = clamped; } catch (e) {}
-          if (this.htmlAudioB) try { this.htmlAudioB.currentTime = clamped; } catch (e) {}
+          if (this.htmlAudioA) try { this.htmlAudioA.currentTime = clamped; } catch (e) { /* Safe: Node test runner or uninitialized DOM element lacking HTMLAudioElement properties */ }
+          if (this.htmlAudioB) try { this.htmlAudioB.currentTime = clamped; } catch (e) { /* Safe: Node test runner or uninitialized DOM element lacking HTMLAudioElement properties */ }
         }
       }
 

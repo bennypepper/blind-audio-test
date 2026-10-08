@@ -1062,6 +1062,29 @@ test('Bench console segmented switcher toggles between standard and scientific p
   assert.strictEqual(panelSci.style.display, 'none', 'Scientific panel should be hidden');
 });
 
+test('loadScientificTrack properly surfaces an error state and halts progression when audio loading fails', async () => {
+  const mockEnv = createMockEnvironment();
+  const { domNodes, mockWindow } = mockEnv;
+  const sandbox = createSandbox(mockEnv);
+
+  vm.createContext(sandbox);
+  vm.runInContext(inlineScriptCode, sandbox);
+
+  await vm.runInContext(`
+    const track = { id: 'test', files: { flac: 'fail.flac', aac256: 'fail.aac' }, hint: 'test', title: 'Test Track', artist: 'Artist', cat: 'Cat', cover: 'test.jpg' };
+    sciTestState = { codec: 'aac256', currentTrialIndex: 0, currentTrackIndex: 0, overallTrialIndex: 0, trackCount: 5, trialsPerTrack: 10, totalTrials: 50, tracks: [track] };
+    ScientificAudioEngine.loadTrack = () => Promise.reject(new Error('Simulated load failure'));
+    loadScientificTrack(0);
+  `, sandbox);
+
+  await new Promise(r => setTimeout(r, 50));
+
+  const titleEl = domNodes.get('sci-title');
+  assert(titleEl.innerHTML.includes('Error loading audio track'), 'Should display error message in track title');
+  const liveEl = domNodes.get('live');
+  assert(liveEl.textContent.includes('Failed to load audio'), 'Should announce the failure');
+});
+
 // ----------------------------------------------------------------------------
 // 4. Regression Verification of Underlying Engine Suites
 // ----------------------------------------------------------------------------

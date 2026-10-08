@@ -429,6 +429,33 @@ async function runSuite() {
     assert(target === 'A' || target === 'B', `Target must be 'A' or 'B', got: ${target}`);
   });
 
+  test('revealTarget() throws if assignTrialTarget() has not been called', () => {
+    const EngineClass = typeof ScientificAudioEngine === 'function' ? ScientificAudioEngine : ScientificAudioEngine.ScientificAudioEngine;
+    const freshEngine = new EngineClass({ audioContext: new MockAudioContext() });
+    assert.throws(() => freshEngine.revealTarget(), /Trial target is unassigned/);
+  });
+
+  test('_getBufferForSource("X") throws if assignTrialTarget() has not been called', () => {
+    const EngineClass = typeof ScientificAudioEngine === 'function' ? ScientificAudioEngine : ScientificAudioEngine.ScientificAudioEngine;
+    const freshEngine = new EngineClass({ audioContext: new MockAudioContext() });
+    assert.throws(() => freshEngine._getBufferForSource('X'), /Trial target is unassigned/);
+  });
+
+  test('Concurrent _fetchAndDecode calls for the same URL return the exact same Promise instance', () => {
+    const EngineClass = typeof ScientificAudioEngine === 'function' ? ScientificAudioEngine : ScientificAudioEngine.ScientificAudioEngine;
+    const freshEngine = new EngineClass({ audioContext: new MockAudioContext() });
+    // Intentionally pass string paths with an unsupported fetch to trigger fallback
+    const prevFetch = global.fetch;
+    global.fetch = () => new Promise(resolve => setTimeout(resolve, 100)); // never resolves quickly
+    try {
+      const p1 = freshEngine._fetchAndDecode('dummy.wav');
+      const p2 = freshEngine._fetchAndDecode('dummy.wav');
+      assert.strictEqual(p1, p2, 'Concurrent calls must return the identical Promise instance');
+    } finally {
+      global.fetch = prevFetch;
+    }
+  });
+
   test('CSPRNG produces balanced distribution across 1000 trials (binomial p > 0.001)', () => {
     let countA = 0;
     let countB = 0;

@@ -19,7 +19,7 @@
       } else {
         document.documentElement.setAttribute('data-theme', 'light');
       }
-    } catch (e) {}
+    } catch (e) { /* Fallback: localStorage restricted by browser security or private browsing mode */ }
   })();
 </script>
 <link rel="stylesheet" href="style.css">
@@ -1009,7 +1009,8 @@
       audio.addEventListener('timeupdate', () => {
         const q = S.qs[qIdx];
         if (!q || q.cur !== sIdx || !S.playing) return;
-        q.pos = Math.min(30, audio.currentTime);
+        const maxDur = (audio && audio.duration && !isNaN(audio.duration) && audio.duration > 0) ? audio.duration : 30;
+        q.pos = Math.min(maxDur, audio.currentTime);
         q.heardT[sIdx] += 0.25;
         if (q.heardT[sIdx] >= 2.0 && !q.heard.has(sIdx)) {
           q.heard.add(sIdx);
@@ -1294,10 +1295,10 @@
       q.posS[prevCur] = q.pos;
       q.pos = q.posS[s];
     }
-    if (q.pos >= 30) q.pos = 0;
-    q.cur = s;
-
     const audio = getAudioEl(q.i, s, q.files[q.order[s]]);
+    const maxDur = (audio && audio.duration && !isNaN(audio.duration) && audio.duration > 0) ? audio.duration : 30;
+    if (q.pos >= maxDur) q.pos = 0;
+    q.cur = s;
     if (audio) {
       if (audio.readyState >= 1) {
         audio.currentTime = q.pos;
@@ -1329,7 +1330,8 @@
       S.playing = false;
       render();
     } else {
-      if (q.pos >= 30) {
+      const maxDur = (audio && audio.duration && !isNaN(audio.duration) && audio.duration > 0) ? audio.duration : 30;
+      if (q.pos >= maxDur) {
         q.pos = 0;
         if (audio) audio.currentTime = 0;
       }
@@ -1406,11 +1408,12 @@
   function seekFrom(e, w) {
     const r = w.getBoundingClientRect();
     const q = S.qs[S.open]; if (!q) return;
-    const target = Math.max(0, Math.min(30, (e.clientX - r.left) / r.width * 30));
+    const audio = q.cur !== null ? getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]) : null;
+    const maxDur = (audio && audio.duration && !isNaN(audio.duration) && audio.duration > 0) ? audio.duration : 30;
+    const target = Math.max(0, Math.min(maxDur, (e.clientX - r.left) / r.width * maxDur));
     q.pos = target;
     if (q.cur !== null) {
       q.posS[q.cur] = target;
-      const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
       if (audio && audio.readyState >= 1) audio.currentTime = target;
     }
     if (S.sync) {
@@ -1433,14 +1436,15 @@
   $('#qlist').addEventListener('keydown', e => {
     const w = e.target.closest('.wave'); if (!w) return;
     const q = S.qs[S.open];
+    const audio = q.cur !== null ? getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]) : null;
+    const maxDur = (audio && audio.duration && !isNaN(audio.duration) && audio.duration > 0) ? audio.duration : 30;
     const d = { ArrowLeft: -1, ArrowRight: 1, PageDown: -5, PageUp: 5 }[e.key];
-    if (d !== undefined) q.pos = Math.max(0, Math.min(30, q.pos + d));
+    if (d !== undefined) q.pos = Math.max(0, Math.min(maxDur, q.pos + d));
     else if (e.key === 'Home') q.pos = 0;
-    else if (e.key === 'End') q.pos = 30;
+    else if (e.key === 'End') q.pos = maxDur;
     else return;
     if (q.cur !== null) {
-      const audio = getAudioEl(q.i, q.cur, q.files[q.order[q.cur]]);
-      if (audio && audio.readyState >= 1) audio.currentTime = target;
+      if (audio && audio.readyState >= 1) audio.currentTime = q.pos;
     }
     if (S.sync) {
       q.order.forEach((k, s) => {
@@ -1702,6 +1706,14 @@
       }
     } catch (err) {
       console.error('Failed to load scientific audio track:', err);
+      const titleEl = $('#sci-title');
+      if (titleEl) titleEl.innerHTML = '<span style="color: var(--bad);">Error loading audio track</span>';
+      if (typeof announce === 'function') announce('Failed to load audio for track. Please check network connection or audio source.');
+      if (typeof sciPlayheadInterval !== 'undefined' && sciPlayheadInterval) {
+        clearInterval(sciPlayheadInterval);
+        sciPlayheadInterval = null;
+      }
+      return;
     }
 
     updateTrialMeta();
@@ -1868,6 +1880,7 @@
       try {
         ScientificAudioEngine.playSource('A');
       } catch (err) {
+        if (typeof announce === 'function') announce('Playback error: ' + (err.message || 'Unable to play source'));
         console.warn('Error auditioning Source A:', err);
       }
     }
@@ -1880,6 +1893,7 @@
       try {
         ScientificAudioEngine.playSource('X');
       } catch (err) {
+        if (typeof announce === 'function') announce('Playback error: ' + (err.message || 'Unable to play source'));
         console.warn('Error auditioning Source X:', err);
       }
     }
@@ -1892,6 +1906,7 @@
       try {
         ScientificAudioEngine.playSource('B');
       } catch (err) {
+        if (typeof announce === 'function') announce('Playback error: ' + (err.message || 'Unable to play source'));
         console.warn('Error auditioning Source B:', err);
       }
     }
@@ -1943,14 +1958,14 @@
 
   $('#sci-wave').addEventListener('pointerdown', e => {
     sciDragging = true;
-    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) { /* Fallback: ignore unsupported or non-touch pointer capture */ }
     seekSciFrom(e);
   });
   window.addEventListener('pointermove', e => { if (sciDragging) seekSciFrom(e); });
   window.addEventListener('pointerup', e => {
     if (sciDragging) {
       sciDragging = false;
-      try { e.target.releasePointerCapture(e.pointerId); } catch (err) {}
+      try { e.target.releasePointerCapture(e.pointerId); } catch (err) { /* Fallback: ignore unsupported or non-touch pointer capture */ }
     }
   });
   window.addEventListener('pointercancel', () => { sciDragging = false; });
