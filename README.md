@@ -58,16 +58,16 @@ All test samples are transcoded directly from original 16-bit / 44.1 kHz Redbook
 
 ## Curated Acoustic Profiles
 
-Each test category includes two contender songs selected for specific psychoacoustic stress characteristics:
+The test battery includes eight diverse acoustic categories selected to evaluate distinct psychoacoustic stress characteristics:
 
-1. **Intimate Solo Vocal**: Adele (*All I Ask*) vs. Hozier (*Take Me to Church*) — Vocal sibilance, breath micro-details, and room reverb decay.
-2. **Acoustic Grand Piano & Strings**: Teddy Swims (*Lose Control - Piano*) vs. Hozier (*Be - Acoustic*) — Piano hammer attack transients, soundboard resonance, and sustained decay tails.
-3. **Complex Cymbals & Rock Drums**: Foo Fighters (*The Pretender*) vs. Queen (*Another One Bites the Dust*) — High-frequency cymbal sheen, snare punch, and transient smearing.
-4. **EDM Sub-Bass & Stereo Synths**: Zedd ft. Foxes (*Clarity*) vs. Alan Walker (*Faded*) — Sub-bass extension, wide stereo phase coherence, and dense limiter pumping.
-5. **Funk Groove & Sharp Horns**: Bruno Mars (*24K Magic*) vs. Daft Punk (*Get Lucky*) — Brass transient punch, dynamic bass slaps, and rhythmic micro-timing.
-6. **Modern Polished Pop**: Dua Lipa (*Don't Start Now*) vs. Ariana Grande (*7 rings*) — Layered vocal production, synthetic sub-bass, and crisp high-end air.
-7. **Symphony Orchestra & Chimes**: John Williams (*Carol of the Bells*) vs. Trans-Siberian Orchestra (*Christmas Eve / Sarajevo*) — Dynamic orchestral swell, delicate bells, and hall acoustics.
-8. **Hyper-Dense Fast J-Pop**: YOASOBI (*Adventure*) vs. Mrs. GREEN APPLE (*Soranji*) — Dense multi-instrument frequency masking, fast arpeggios, and compression stress.
+1. **Intimate Solo Vocal**: Sparse acoustic arrangement focusing on vocal sibilance, breath micro-details, and room reverberation decay.
+2. **Acoustic Grand Piano & Strings**: Steep percussive hammer attack transients, complex soundboard resonance, and sustained harmonic decay tails.
+3. **Complex Cymbals & Rock Drums**: High-frequency metallic sheen, snare punch, and transient smearing under lossy transform boundaries.
+4. **EDM Sub-Bass & Stereo Synths**: Deep sub-bass frequency extension, wide stereo phase coherence, and heavy dynamic limiter pumping.
+5. **Funk Groove & Sharp Horns**: Fast brass attack transients, dynamic bass guitar articulation, and rhythmic micro-timing.
+6. **Modern Polished Pop**: Heavily layered production, synthetic sub-bass weight, and crisp high-frequency air.
+7. **Symphony Orchestra & Chimes**: Wide dynamic range, delicate orchestral percussion, bells, and complex multi-instrumental hall decay.
+8. **Hyper-Dense Fast J-Pop**: Extremely high note density, multi-layer frequency masking, fast synth arpeggios, and compression stress.
 
 ---
 
