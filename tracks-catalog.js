@@ -4,13 +4,14 @@
  */
 (function() {
   const CODECS = {
-    flac:    { name: 'FLAC',          service: 'Lossless Master', kbps: 700, label: '~700 kbps' },
-    aac256:  { name: 'AAC 256 kbps',  service: 'Apple Music',     kbps: 256, label: '256 kbps' },
-    opus128: { name: 'Opus 128 kbps', service: 'YouTube Music',   kbps: 128, label: '128 kbps' },
-    mp3128:  { name: 'MP3 128 kbps',  service: 'Standard MP3',    kbps: 128, label: '128 kbps' }
+    flac:      { name: 'FLAC',              service: 'Lossless Master', kbps: 700, label: '~700 kbps' },
+    vorbis320: { name: 'Vorbis 320 kbps',   service: 'Spotify Premium', kbps: 320, label: '320 kbps' },
+    aac256:    { name: 'AAC 256 kbps',      service: 'Apple Music',     kbps: 256, label: '256 kbps' },
+    opus128:   { name: 'Opus 128 kbps',     service: 'YouTube Music',   kbps: 128, label: '128 kbps' },
+    mp3128:    { name: 'MP3 128 kbps',      service: 'Standard MP3',    kbps: 128, label: '128 kbps' }
   };
 
-  const KEYS = ['flac', 'aac256', 'opus128', 'mp3128'];
+  const KEYS = ['flac', 'vorbis320', 'aac256', 'opus128', 'mp3128'];
 
   const SONG_CATEGORIES = [
     {
@@ -25,6 +26,7 @@
           cover: "covers/song1.jpg",
           files: {
             flac: "audio/song1_flac.flac",
+            vorbis320: "audio/song1_vorbis320.ogg",
             aac256: "audio/song1_aac256.m4a",
             opus128: "audio/song1_opus128.opus",
             mp3128: "audio/song1_mp3128.mp3"
@@ -39,6 +41,7 @@
           cover: "covers/song9.jpg",
           files: {
             flac: "audio/song9_flac.flac",
+            vorbis320: "audio/song9_vorbis320.ogg",
             aac256: "audio/song9_aac256.m4a",
             opus128: "audio/song9_opus128.opus",
             mp3128: "audio/song9_mp3128.mp3"
@@ -58,6 +61,7 @@
           cover: "covers/song2.jpg",
           files: {
             flac: "audio/song2_flac.flac",
+            vorbis320: "audio/song2_vorbis320.ogg",
             aac256: "audio/song2_aac256.m4a",
             opus128: "audio/song2_opus128.opus",
             mp3128: "audio/song2_mp3128.mp3"
@@ -72,6 +76,7 @@
           cover: "covers/song10.jpg",
           files: {
             flac: "audio/song10_flac.flac",
+            vorbis320: "audio/song10_vorbis320.ogg",
             aac256: "audio/song10_aac256.m4a",
             opus128: "audio/song10_opus128.opus",
             mp3128: "audio/song10_mp3128.mp3"
@@ -91,6 +96,7 @@
           cover: "covers/song3.jpg",
           files: {
             flac: "audio/song3_flac.flac",
+            vorbis320: "audio/song3_vorbis320.ogg",
             aac256: "audio/song3_aac256.m4a",
             opus128: "audio/song3_opus128.opus",
             mp3128: "audio/song3_mp3128.mp3"
@@ -105,6 +111,7 @@
           cover: "covers/song11.jpg",
           files: {
             flac: "audio/song11_flac.flac",
+            vorbis320: "audio/song11_vorbis320.ogg",
             aac256: "audio/song11_aac256.m4a",
             opus128: "audio/song11_opus128.opus",
             mp3128: "audio/song11_mp3128.mp3"
@@ -124,6 +131,7 @@
           cover: "covers/song4.jpg",
           files: {
             flac: "audio/song4_flac.flac",
+            vorbis320: "audio/song4_vorbis320.ogg",
             aac256: "audio/song4_aac256.m4a",
             opus128: "audio/song4_opus128.opus",
             mp3128: "audio/song4_mp3128.mp3"
@@ -138,6 +146,7 @@
           cover: "covers/song12.jpg",
           files: {
             flac: "audio/song12_flac.flac",
+            vorbis320: "audio/song12_vorbis320.ogg",
             aac256: "audio/song12_aac256.m4a",
             opus128: "audio/song12_opus128.opus",
             mp3128: "audio/song12_mp3128.mp3"
@@ -157,6 +166,7 @@
           cover: "covers/song5.jpg",
           files: {
             flac: "audio/song5_flac.flac",
+            vorbis320: "audio/song5_vorbis320.ogg",
             aac256: "audio/song5_aac256.m4a",
             opus128: "audio/song5_opus128.opus",
             mp3128: "audio/song5_mp3128.mp3"
@@ -171,6 +181,7 @@
           cover: "covers/song13.jpg",
           files: {
             flac: "audio/song13_flac.flac",
+            vorbis320: "audio/song13_vorbis320.ogg",
             aac256: "audio/song13_aac256.m4a",
             opus128: "audio/song13_opus128.opus",
             mp3128: "audio/song13_mp3128.mp3"
@@ -190,6 +201,7 @@
           cover: "covers/song6.jpg",
           files: {
             flac: "audio/song6_flac.flac",
+            vorbis320: "audio/song6_vorbis320.ogg",
             aac256: "audio/song6_aac256.m4a",
             opus128: "audio/song6_opus128.opus",
             mp3128: "audio/song6_mp3128.mp3"
@@ -204,6 +216,7 @@
           cover: "covers/song14.jpg",
           files: {
             flac: "audio/song14_flac.flac",
+            vorbis320: "audio/song14_vorbis320.ogg",
             aac256: "audio/song14_aac256.m4a",
             opus128: "audio/song14_opus128.opus",
             mp3128: "audio/song14_mp3128.mp3"
@@ -223,6 +236,7 @@
           cover: "covers/song7.jpg",
           files: {
             flac: "audio/song7_flac.flac",
+            vorbis320: "audio/song7_vorbis320.ogg",
             aac256: "audio/song7_aac256.m4a",
             opus128: "audio/song7_opus128.opus",
             mp3128: "audio/song7_mp3128.mp3"
@@ -237,6 +251,7 @@
           cover: "covers/song15.jpg",
           files: {
             flac: "audio/song15_flac.flac",
+            vorbis320: "audio/song15_vorbis320.ogg",
             aac256: "audio/song15_aac256.m4a",
             opus128: "audio/song15_opus128.opus",
             mp3128: "audio/song15_mp3128.mp3"
@@ -256,6 +271,7 @@
           cover: "covers/song8.jpg",
           files: {
             flac: "audio/song8_flac.flac",
+            vorbis320: "audio/song8_vorbis320.ogg",
             aac256: "audio/song8_aac256.m4a",
             opus128: "audio/song8_opus128.opus",
             mp3128: "audio/song8_mp3128.mp3"
@@ -270,6 +286,7 @@
           cover: "covers/song16.jpg",
           files: {
             flac: "audio/song16_flac.flac",
+            vorbis320: "audio/song16_vorbis320.ogg",
             aac256: "audio/song16_aac256.m4a",
             opus128: "audio/song16_opus128.opus",
             mp3128: "audio/song16_mp3128.mp3"

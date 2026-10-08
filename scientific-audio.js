@@ -338,7 +338,7 @@
       }
 
       // Fallback: HTML5 Audio Elements
-      // Seamlessly handles file:// protocol and native browser codecs (.flac, .m4a, .opus, .mp3) without CORS blocks
+      // Seamlessly handles file:// protocol and native browser codecs (.flac, .ogg, .m4a, .opus, .mp3) without CORS blocks
       return new Promise((resolve, reject) => {
         try {
           const AudioCtor = (typeof Audio !== 'undefined') ? Audio : (typeof window !== 'undefined' && window.Audio ? window.Audio : (typeof globalThis !== 'undefined' && globalThis.Audio ? globalThis.Audio : null));

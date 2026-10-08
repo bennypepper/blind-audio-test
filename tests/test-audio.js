@@ -638,6 +638,41 @@ async function runSuite() {
   });
 
   // -------------------------------------------------------------
+  // 10. Tracks Catalog & Audio Assets Verification
+  // -------------------------------------------------------------
+  console.log('\n10. Tracks Catalog & Audio Assets Verification:');
+
+  test('TracksCatalog includes Vorbis 320 kbps specifications', () => {
+    const TracksCatalog = require('../tracks-catalog.js');
+    assert(TracksCatalog.CODECS.vorbis320, 'vorbis320 codec must be defined');
+    assert.strictEqual(TracksCatalog.CODECS.vorbis320.name, 'Vorbis 320 kbps');
+    assert.strictEqual(TracksCatalog.CODECS.vorbis320.kbps, 320);
+    assert.strictEqual(TracksCatalog.CODECS.vorbis320.service, 'Spotify Premium');
+    assert(TracksCatalog.KEYS.includes('vorbis320'), 'KEYS must include vorbis320');
+  });
+
+  test('All 16 contenders define vorbis320 audio assets and files exist on disk with size > 10000 bytes', () => {
+    const TracksCatalog = require('../tracks-catalog.js');
+    const path = require('path');
+    let totalContenders = 0;
+
+    TracksCatalog.SONG_CATEGORIES.forEach(cat => {
+      cat.contenders.forEach(song => {
+        totalContenders++;
+        assert(song.files && song.files.vorbis320, `Song ${song.id} must define files.vorbis320`);
+        assert.strictEqual(song.files.vorbis320, `audio/song${song.id}_vorbis320.ogg`);
+
+        const filePath = path.resolve(__dirname, '..', song.files.vorbis320);
+        assert(fs.existsSync(filePath), `Audio file ${song.files.vorbis320} must exist on disk`);
+        const stats = fs.statSync(filePath);
+        assert(stats.size > 10000, `Audio file ${song.files.vorbis320} size (${stats.size}) must be > 10000 bytes`);
+      });
+    });
+
+    assert.strictEqual(totalContenders, 16, 'Must verify all 16 contenders');
+  });
+
+  // -------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------
   console.log(`\nTest Summary: ${passed} passed, ${failed} failed\n`);
